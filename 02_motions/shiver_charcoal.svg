@@ -1,0 +1,9 @@
+<svg width="1280" height="287" viewBox="0 0 1280 287" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Left shoulder shivering lines -->
+  <path d="M 38 200 C 38 200 38 193 46 182 C 52 175 72 178 80 175 C 93 170 87 147 86 133 C 86 128 97 126 106 123 C 112 121 112 105 114 86 C 116 69 149 76 161 74 C 169 73 165 52 166 38 C 167 33 170 32 176 32 C 182 32 190 34 202 35" stroke="#2C2C2C" stroke-width="5" stroke-linecap="butt" stroke-linejoin="miter"/>
+  <path d="M 6 171 C 6 171 6 164 14 153 C 20 146 40 149 48 146 C 61 141 55 118 54 104 C 54 99 65 97 74 94 C 80 92 80 76 82 57 C 84 40 117 47 129 45 C 137 44 133 23 134 9 C 135 4 138 3 144 3 C 150 3 158 5 170 6" stroke="#2C2C2C" stroke-width="5" stroke-linecap="butt" stroke-linejoin="miter"/>
+
+  <!-- Right shoulder shivering lines -->
+  <path d="M 1122 87 C 1125 87 1134 87 1146 88 C 1166 90 1133 139 1135 145 C 1145 168 1179 158 1183 160 C 1191 166 1182 183 1181 193 C 1179 208 1214 203 1218 206 C 1222 209 1219 217 1217 224 C 1213 237 1242 242 1244 248 C 1244 255 1241 264 1238 271 C 1236 275 1234 278 1231 282" stroke="#2C2C2C" stroke-width="5" stroke-linecap="butt" stroke-linejoin="miter"/>
+  <path d="M 1154 64 C 1157 64 1166 64 1178 65 C 1198 68 1165 117 1167 123 C 1176 146 1211 135 1215 138 C 1223 143 1214 161 1213 171 C 1211 185 1246 180 1250 183 C 1254 186 1251 194 1249 201 C 1245 215 1274 220 1276 225 C 1276 233 1273 241 1270 249 C 1268 252 1266 255 1263 260" stroke="#2C2C2C" stroke-width="5" stroke-linecap="butt" stroke-linejoin="miter"/>
+</svg>
