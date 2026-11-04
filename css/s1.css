@@ -1,0 +1,814 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+
+    .sr-only {
+      position: absolute; width: 1px; height: 1px;
+      overflow: hidden; clip: rect(0 0 0 0);
+    }
+
+    /* 12.9인치 가로 기준 스테이지 (1366 x 1024) — 다른 비율 기기에서는 중앙 배치 및 레터박스(검정) */
+    .stage {
+      position: absolute;
+      left: 50%; top: 50%;
+      width: 1366px; height: 1024px;
+      overflow: visible;
+      transform-origin: center center;
+      transform: translate(-50%, -50%) scale(var(--scale, 1));
+    }
+
+    /* 화면 바깥으로 나간 그래픽을 완벽하게 가려주는 최상단 블랙 마스킹 레이어 (2000px 블랙 테두리) */
+    .stage::after {
+      content: '';
+      position: absolute;
+      inset: -2000px;
+      border: 2000px solid #000000;
+      pointer-events: none;
+      z-index: 999999;
+    }
+    .stage-black-mask {
+      position: absolute;
+      background: #000000;
+      pointer-events: none;
+      z-index: 999999;
+    }
+    .stage-black-mask.mask-right {
+      left: 1366px;
+      top: -2000px;
+      width: 4000px;
+      height: 6000px;
+    }
+    .stage-black-mask.mask-left {
+      right: 1366px;
+      top: -2000px;
+      width: 4000px;
+      height: 6000px;
+    }
+    .stage-black-mask.mask-top {
+      left: -2000px;
+      bottom: 1024px;
+      width: 6000px;
+      height: 4000px;
+    }
+    .stage-black-mask.mask-bottom {
+      left: -2000px;
+      top: 1024px;
+      width: 6000px;
+      height: 4000px;
+    }
+
+    /* 각 장면 공통 */
+    .scene {
+      position: absolute; inset: 0;
+      overflow: hidden;
+      will-change: transform;
+      backface-visibility: hidden;
+      transform: translate3d(0, 0, 0);
+    }
+
+    .scene .bg {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      display: block;
+    }
+
+    /* 전환: 위로 슬라이드 (부드럽고 빠른 1.6s 커튼콜) */
+    .scene.slide-up-out {
+      animation: slideUpOut 1.6s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+      z-index: 10;
+    }
+    @keyframes slideUpOut {
+      from { transform: translate3d(0, 0, 0); }
+      to   { transform: translate3d(0, -100%, 0); }
+    }
+
+    /* 전환: 페이드 (2분 무입력 시 대기화면 복귀) */
+    .scene.fade-in {
+      animation: fadeIn 0.8s ease forwards;
+      z-index: 10;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    /* ========== 대기화면(0번 장면 / Scene 1): 외벽 꽃 3개 살랑임 ========== */
+    .flower {
+      position: absolute;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .f1, .flower.f1 { left: 957px; top: 178px; width: 219.5px; height: 229.5px; }
+    .f2, .flower.f2 { left: 949px; top: 443px; width: 133px;   height: 145px;   }
+    .f3, .flower.f3 { left: 985px; top: 615px; width: 172px;   height: 181px;   }
+
+    .flower img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      transform-origin: 50% 50%;
+      animation: s01sway 2s steps(25) infinite alternate;
+      backface-visibility: hidden;
+      will-change: transform;
+    }
+
+    .f1 img, .flower.f1 img { --a: -5deg;   --b: 4deg; }
+    .f2 img, .flower.f2 img { --a: 6deg;    --b: -4deg; }
+    .f3 img, .flower.f3 img { --a: -3.5deg; --b: 5.5deg; }
+
+    @keyframes s01sway {
+      from { transform: rotate(var(--a)) translateZ(0); }
+      to   { transform: rotate(var(--b)) translateZ(0); }
+    }
+
+    /* ========== 2장면: 비 내리는 책방 및 텍스트 ========== */
+    .scene-02 .rain {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 1; /* 곱하기 투명도 레이어(.veil) 아래에 위치 */
+    }
+
+    .scene-02 .veil {
+      position: absolute; inset: 0;
+      background: #453E72;
+      opacity: 0.9;
+      mix-blend-mode: multiply;
+      transition: opacity 2.4s ease;
+      z-index: 2; /* 빗줄기 위에 위치하여 곱하기 블렌드 효과 적용 */
+    }
+    .scene-02 .veil.gone { opacity: 0; }
+
+    @font-face {
+      font-family: 'DungGeunMo';
+      src: url('04_filters_fonts/DungGeunMo.otf') format('opentype');
+    }
+
+    .scene-02 .guide-text {
+      position: absolute;
+      left: 0; right: 0; top: 50%;
+      transform: translateY(-50%);
+      font-family: 'DungGeunMo', monospace;
+      font-size: 42px;
+      line-height: 1.6;
+      color: #615CB7;
+      text-align: center;
+      white-space: nowrap;
+      user-select: none;
+      pointer-events: none;
+      transition: opacity 2.4s ease;
+      z-index: 3;
+    }
+    .scene-02 .guide-text.gone { opacity: 0; }
+    .scene-02 .guide-text .ch {
+      display: inline-block;
+      visibility: hidden;
+    }
+    .scene-02 .guide-text .ch.on { visibility: visible; }
+
+    /* ========== 3장면: 책방 앞 + 초록 대화창 & 대사 타이핑 ========== */
+    .scene-03 .rain {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+    }
+
+    /* ========== 대화창 공통 스타일 & 텍스트 규칙 (가장 상단 레이어) ========== */
+    .dialog-wrap {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 216px;
+      z-index: 100; /* 최상단 레이어 */
+      pointer-events: none;
+    }
+
+    .dialog-wrap .dialog-bg {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      display: block;
+    }
+
+    .dialog-wrap .dialog-text {
+      position: absolute;
+      left: 65px; right: 65px; top: 0; bottom: 0;
+      display: flex;
+      align-items: center;
+      font-family: 'DungGeunMo', monospace;
+      font-size: 48px;
+      letter-spacing: -0.5px;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .dialog-wrap .dialog-body {
+      color: #FFFAE1;
+    }
+
+    .dialog-wrap .ch {
+      display: inline-block;
+      visibility: hidden;
+    }
+    .dialog-wrap .ch.on {
+      visibility: visible;
+    }
+    .dialog-wrap .ch.dim {
+      opacity: 0.3;
+    }
+
+    /* 그린 텍스트 규칙 (You: #308DA4) */
+    .dialog-wrap.green .speaker,
+    .scene-03 .speaker,
+    .scene-04 .speaker,
+    .scene-06 .speaker,
+    .scene-10 .speaker,
+    .scene-12 .speaker,
+    .scene-16 .speaker {
+      color: #308DA4;
+      margin-right: 14px;
+    }
+
+    /* 레드 텍스트 규칙 (P: #D13D79) */
+    .dialog-wrap.red .speaker,
+    .scene-05 .speaker,
+    .scene-07 .speaker,
+    .scene-08 .speaker,
+    .scene-09 .speaker,
+    .scene-11 .speaker,
+    .scene-13 .speaker,
+    .scene-14 .speaker,
+    .scene-15 .speaker,
+    .scene-17 .speaker,
+    .scene-18 .speaker,
+    .scene-19 .speaker {
+      color: #D13D79;
+      margin-right: 14px;
+    }
+
+    /* 퍼플 텍스트 규칙 및 보라색 대화창: 화면 바깥으로 넉넉하게 확장하여 틈새 완전 차단 */
+    .dialog-wrap.purple {
+      background: linear-gradient(
+        to bottom,
+        #702188 0px,
+        #702188 34px,
+        #4C105E 34px,
+        #4C105E 182px,
+        #702188 182px,
+        #702188 216px
+      );
+    }
+    .dialog-wrap.purple .dialog-bg {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: calc(100% + 500px); /* 화면 우측 바깥으로 넉넉하게 내보냄 */
+      height: 100%;
+      object-fit: fill;
+    }
+    .dialog-wrap.purple::after {
+      content: '';
+      position: absolute;
+      left: 100%;
+      top: 0;
+      width: 500px;
+      height: 100%;
+      background: linear-gradient(
+        to bottom,
+        #702188 0px,
+        #702188 34px,
+        #4C105E 34px,
+        #4C105E 182px,
+        #702188 182px,
+        #702188 216px
+      );
+      pointer-events: none;
+    }
+    .dialog-wrap.purple .speaker {
+      color: #615CB7;
+      margin-right: 14px;
+    }
+    .dialog-wrap.purple .dialog-body,
+    .dialog-wrap.purple .knock-guide {
+      color: #615CB7;
+    }
+
+    /* ========== 전체 장면 공통 컬러 필터 레이어 (#FFDB3B, 25%, multiply, 대기화면 포함) ========== */
+    .scene-color-filter {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1366px;
+      height: 1024px;
+      background-color: #FFDB3B;
+      opacity: 0.25;
+      mix-blend-mode: multiply;
+      pointer-events: none;
+      z-index: 45; /* 대화창(z-index: 50) 바로 아래, 씬 내 그래픽/모션 요소 최상단 */
+    }
+    .scene-color-filter.with-dialog,
+    .scene:has(.dialog-wrap) .scene-color-filter {
+      height: 809px; /* 대화창 영역을 침범하지 않도록 상단에만 밀착 배치 (1366*809) */
+    }
+
+    /* ========== 4장면: 노크 장면 (배경, 도어 슬라이드, arm 마우스 커서, 타이핑) ========== */
+    .scene-04 {
+      cursor: none; /* 실제 마우스 커서 숨김 */
+    }
+
+    .rain {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+    }
+
+    .scene-04 .rain,
+    .scene-05 .rain,
+    .scene-06 .rain,
+    .scene-11 .rain {
+      z-index: 2; /* 꽃 레이어(z-index: 1) 위에서 비가 가림 없이 내리도록 설정 */
+    }
+
+    /* 4장면, 5장면, 6장면: 3장면(03.png) 꽃 위치와 100% 동일하게 일치시키는 꽃 레이어 */
+    .flowers-layer {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .flowers-layer .flower-strip {
+      position: absolute;
+      top: 0; bottom: 0;
+      overflow: hidden;
+    }
+    .flowers-layer .flower-strip.left {
+      left: 0;
+      width: 376px;
+    }
+    .flowers-layer .flower-strip.right {
+      left: 925px;
+      width: 441px;
+    }
+    .flowers-layer .flower-strip img {
+      position: absolute;
+      top: 0;
+      width: 1366px;
+      height: 1024px;
+      display: block;
+    }
+    .flowers-layer .flower-strip.left img {
+      left: 0;
+    }
+    .flowers-layer .flower-strip.right img {
+      left: -925px;
+    }
+
+    /* 7장면, 8장면, 9장면: 비둘기 날개 (몸통 기준 안쪽 고정점, 위아래 살짝 날갯짓) */
+    .pigeon-wing {
+      position: absolute;
+      width: 313.5px;
+      height: 278.5px;
+      z-index: 2;
+      pointer-events: none;
+      will-change: transform;
+    }
+    .pigeon-wing img {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .pigeon-wing.left {
+      left: 165px;
+      top: 430px;
+      transform-origin: 90% 45%;
+      animation: wingFlapLeft 1.44s steps(18) infinite alternate;
+    }
+    .pigeon-wing.right {
+      right: 165px;
+      top: 430px;
+      transform-origin: 10% 45%;
+      animation: wingFlapRight 1.44s steps(18) infinite alternate;
+    }
+    @keyframes wingFlapLeft {
+      0%   { transform: rotate(-5deg); }
+      100% { transform: rotate(5deg); }
+    }
+    @keyframes wingFlapRight {
+      0%   { transform: rotate(5deg); }
+      100% { transform: rotate(-5deg); }
+    }
+
+    /* 4장면 슬라이딩 도어 (24프레임 전개) */
+    .scene-04 .door {
+      position: absolute;
+      left: 619.24px; top: 97.91px;
+      z-index: 3;
+      cursor: none;
+      transition: transform 2.0s steps(48);
+      will-change: transform;
+    }
+    .scene-04 .door img {
+      display: block;
+      width: auto;
+      height: auto;
+    }
+    .scene-04 .door.opened {
+      transform: translateX(-241.21px); /* x619.24 -> x378.03 으로 슬라이딩 이동 */
+    }
+
+    /* 건물 간판 정정 레이어 (知花冊房) */
+    .sign-fixed {
+      position: absolute;
+      width: 61px;
+      height: 247px;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .sign-fixed img {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .scene-02 .sign-fixed {
+      left: 924px;
+      top: 235.5px;
+    }
+    .scene-03 .sign-fixed,
+    .scene-04 .sign-fixed,
+    .scene-05 .sign-fixed,
+    .scene-06 .sign-fixed,
+    .scene-11 .sign-fixed {
+      left: 924px;
+      top: 149.5px;
+    }
+
+    /* 15/16장면: 33번 장면 스타일 빈티지 땀방울 꿈틀 모션 (7~8fps 스톱모션 스타일) */
+    .sweat-group,
+    .scene-15 .sweat-group,
+    .scene-16 .sweat-group {
+      position: absolute;
+      left: 1086px;
+      top: 148px;
+      width: 161px;
+      height: 121px;
+      transform-origin: 50% 50%;
+      pointer-events: none;
+      z-index: 4;
+      will-change: transform;
+      animation: sweatVintageWriggle 0.72s steps(1) infinite;
+    }
+    .sweat-group img,
+    .scene-15 .sweat-group img,
+    .scene-16 .sweat-group img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+    }
+
+    @keyframes sweatVintageWriggle {
+      0%, 100% {
+        transform: translate3d(0, 0, 0) scale(1, 1) rotate(0deg);
+      }
+      20% {
+        transform: translate3d(-0.5px, 0.5px, 0) scale(1.04, 0.96) rotate(-1.5deg);
+      }
+      40% {
+        transform: translate3d(0.5px, -0.5px, 0) scale(0.97, 1.03) rotate(1deg);
+      }
+      60% {
+        transform: translate3d(-0.5px, 0.5px, 0) scale(1.02, 0.98) rotate(-1deg);
+      }
+      80% {
+        transform: translate3d(0.5px, 0.5px, 0) scale(0.98, 1.02) rotate(1.5deg);
+      }
+    }
+
+    /* 5장면, 6장면, 11장면: 이전 장면에서 슬라이딩 완료된 문 유지 (x: 378.03px, y: 97.91px) */
+    .scene-05 .door,
+    .scene-06 .door,
+    .scene-11 .door {
+      position: absolute;
+      left: 378.03px; top: 97.91px;
+      z-index: 3;
+    }
+    .scene-05 .door img,
+    .scene-06 .door img,
+    .scene-11 .door img {
+      display: block;
+      width: auto;
+      height: auto;
+    }
+
+    /* 12장면: 주인공(human) 클로즈업 레이어 및 비 레이어 */
+    .scene-12 .rain {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .scene-12 .human {
+      position: absolute;
+      right: 0; top: 0;
+      width: 1313px;
+      height: 1024px;
+      pointer-events: none;
+      z-index: 3;
+    }
+    .scene-12 .human img {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* 13장면, 14장면, 15장면: 비 내리는 창가 비둘기 씬 (배경, 비, 비둘기 방 전경, 레드 대화창) */
+    .scene-13 .rain,
+    .scene-14 .rain,
+    .scene-15 .rain {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .scene-13 .pigeon-room,
+    .scene-14 .pigeon-room,
+    .scene-15 .pigeon-room {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 3;
+    }
+    .scene-13 .pigeon-room img,
+    .scene-14 .pigeon-room img,
+    .scene-15 .pigeon-room img {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* 17장면: 비 내리는 창가 비둘기 씬 (배경, 비, 비둘기 방 전경, 상단 레드 대화창) */
+    .scene-17 .rain {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .scene-17 .pigeon-room {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 3;
+    }
+    .scene-17 .pigeon-room img {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* 18장면: 계단 오르는 비둘기 뒷모습 씬 (진정한 아날로그 스톱모션 12.5fps / step-end 적용) */
+    .scene-18 .pigeon-climber {
+      position: absolute;
+      left: 468px;
+      bottom: 336px;
+      width: 430px;
+      height: 335px;
+      transform-origin: 50% 95%;
+      z-index: 5;
+      pointer-events: none;
+      animation: pigeonClimbMiddle 2.24s step-end forwards;
+      animation-delay: 0.35s;
+    }
+    .scene-18 .pigeon-climber .body,
+    .scene-18 .pigeon-climber .wing {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .scene-18 .pigeon-climber img {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .scene-18 .pigeon-climber .wing.left {
+      transform-origin: 28% 50%;
+      animation: flapLeft 0.32s step-end 6 forwards;
+      animation-delay: 0.35s;
+    }
+    .scene-18 .pigeon-climber .wing.right {
+      transform-origin: 72% 50%;
+      animation: flapRight 0.32s step-end 6 forwards;
+      animation-delay: 0.35s;
+    }
+    @keyframes flapLeft {
+      0%   { transform: rotate(0deg); }
+      25%  { transform: rotate(-26deg); }
+      50%  { transform: rotate(24deg); }
+      75%  { transform: rotate(0deg); }
+      100% { transform: rotate(0deg); }
+    }
+    @keyframes flapRight {
+      0%   { transform: rotate(0deg); }
+      25%  { transform: rotate(26deg); }
+      50%  { transform: rotate(-24deg); }
+      75%  { transform: rotate(0deg); }
+      100% { transform: rotate(0deg); }
+    }
+    @keyframes pigeonClimbMiddle {
+      /* 12.5fps 스톱모션 (한 프레임 = 0.08s, 총 28프레임 = 2.24s) */
+      /* 프레임 간 중간 보간 없이 각 프레임이 탁-탁 끊어지며 도약 */
+      /* 0~2프레임: 바닥 준비 동작 */
+      0%   { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+      7%   { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+
+      /* 1번째 칸 도약 (3~7프레임): 발을 떼고 1단 위로 톡 뜀 */
+      11%  { transform: translate3d(0, -45px, 0) scale(0.97); opacity: 1; }
+      14%  { transform: translate3d(0, -115px, 0) scale(0.93); opacity: 1; }
+      18%  { transform: translate3d(0, -155px, 0) scale(0.90); opacity: 1; }
+      21%  { transform: translate3d(0, -135px, 0) scale(0.89); opacity: 1; }
+      25%  { transform: translate3d(0, -121px, 0) scale(0.88); opacity: 1; }
+
+      /* 1단 위 안착 및 호흡 (8~11프레임) */
+      29%  { transform: translate3d(0, -121px, 0) scale(0.88); opacity: 1; }
+      39%  { transform: translate3d(0, -121px, 0) scale(0.88); opacity: 1; }
+
+      /* 2번째 칸 도약 (12~16프레임): 중간 계단으로 톡 뜀 */
+      43%  { transform: translate3d(0, -165px, 0) scale(0.85); opacity: 1; }
+      46%  { transform: translate3d(0, -235px, 0) scale(0.82); opacity: 1; }
+      50%  { transform: translate3d(0, -275px, 0) scale(0.79); opacity: 1; }
+      54%  { transform: translate3d(0, -255px, 0) scale(0.78); opacity: 1; }
+      57%  { transform: translate3d(0, -243px, 0) scale(0.78); opacity: 1; }
+
+      /* 대사 출력 타이밍에 맞춰 계단 중간에 정지 유지 (17~28프레임) */
+      61%  { transform: translate3d(0, -243px, 0) scale(0.78); opacity: 1; }
+      100% { transform: translate3d(0, -243px, 0) scale(0.78); opacity: 1; }
+    }
+
+    /* arm 커서 (두 배 축소: 1230x1290, 살구색 주먹 중심 초점 유지, 오른쪽 등장) */
+    .scene-04 {
+      overflow: visible !important;
+    }
+    .scene-04 .arm-cursor {
+      position: absolute;
+      left: 1120px; top: 500px;
+      width: 1230px;
+      height: 1290px;
+      pointer-events: none;
+      z-index: 10;
+      transform: translate(-30.5%, -18.5%);
+      will-change: transform, left, top;
+      clip-path: inset(0 0 216px 0); /* 대화창 영역 아래로는 팔 그래픽 렌더링 차단 */
+    }
+    .scene-04 .arm-cursor img {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* 노크 모션: 주먹으로 톡톡 두드리는 리듬감 있는 모션 (12.5fps 스톱모션) */
+    .scene-04 .arm-cursor.knocking {
+      animation: knockMotion 0.56s steps(7);
+    }
+    @keyframes knockMotion {
+      0%   { transform: translate(-30.5%, -18.5%) scale(1); }
+      20%  { transform: translate(-33%, -22%) scale(0.92) rotate(-4deg); }
+      40%  { transform: translate(-28%, -15%) scale(1.08) rotate(3deg); }
+      60%  { transform: translate(-32%, -20%) scale(0.95) rotate(-2deg); }
+      80%  { transform: translate(-28%, -15%) scale(1.08) rotate(3deg); }
+      100% { transform: translate(-30.5%, -18.5%) scale(1); }
+    }
+    /* 장면 번호 표시: '현재장면/총장면수' (DungGeunMo, #0000, 곱하기, 투명도 20, 18px)
+       대화창 맨 아래 줄 또는 대화창 없는 화면의 동일 위치(가장 상단 레이어)에 배치 */
+    .scene-counter {
+      position: absolute;
+      right: 14px;
+      bottom: 8px;
+      line-height: 1;
+      font-family: 'DungGeunMo', monospace;
+      font-size: 18px;
+      color: #000000;
+      opacity: 0.20;
+      mix-blend-mode: multiply;
+      pointer-events: none;
+      z-index: 100;
+      user-select: none;
+    }
+    .dialog-wrap .scene-counter {
+      right: 14px;
+    }
+
+    /* ========== 우측 하단 페이지 번호 더블클릭 → 대사창 아래쪽 직사각형 칸(34px) 내 얇은 척도 바 ========== */
+    .scene-counter {
+      pointer-events: auto;
+      cursor: pointer;
+      padding: 6px 8px;
+      margin: -6px -8px;
+      z-index: 120;
+    }
+
+    .scene-progress-wrap {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 860px;
+      height: 34px; /* 대사창 아래쪽 직사각형 칸(182px~216px, 높이 34px) 정중앙 배치 */
+      z-index: 118;
+      pointer-events: auto;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .dialog-wrap .scene-progress-wrap {
+      left: calc(50% - 3px); /* .dialog-wrap 우측 6px 확장에 맞춘 스테이지 정중앙 정렬 */
+    }
+
+    .scene-progress-wrap.open {
+      display: flex;
+    }
+
+    .scene-progress-wrap.dragging {
+      cursor: grabbing;
+    }
+
+    .scene-progress-bar {
+      position: relative;
+      width: 100%;
+      height: 8px; /* 대사창 하단 직사각형 칸 안에 들어가는 얇은 척도 바 */
+      background: rgba(75, 15, 95, 0.38) url('02_motions/progress_bar.png') no-repeat center / 100% 100%;
+      overflow: hidden;
+      border-radius: 4px;
+      transform-origin: 50% 50%;
+      transition: filter 0.18s ease, transform 0.22s cubic-bezier(0.2, 0.8, 0.25, 1);
+    }
+
+    .scene-progress-wrap:hover .scene-progress-bar,
+    .scene-progress-wrap.dragging .scene-progress-bar {
+      transform: scaleY(1.35);
+      filter: brightness(1.25);
+    }
+
+    .scene-progress-hover {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: calc(var(--hover-ratio, 0) * 100%);
+      background: rgba(230, 200, 255, 0.22);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease;
+    }
+
+    .scene-progress-wrap:hover .scene-progress-hover {
+      opacity: 1;
+    }
+
+    .scene-progress-wrap.dragging .scene-progress-hover {
+      opacity: 0;
+    }
+
+    .scene-progress-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 10px;
+      background: rgba(75, 15, 95, 0.55) url('02_motions/progress_gauge.png') repeat-x left center / auto 100%;
+      transition: width 0.25s cubic-bezier(0.2, 0.8, 0.25, 1);
+    }
+
+    .scene-progress-wrap.dragging .scene-progress-fill {
+      transition: none;
+    }
+
+    .scene-progress-fill::after {
+      content: '';
+      position: absolute;
+      top: 1px;
+      bottom: 1px;
+      right: 0;
+      width: 3px;
+      border-radius: 2px;
+      background: rgba(255, 240, 255, 0.9);
+      opacity: 0;
+      transition: opacity 0.18s ease;
+    }
+
+    .scene-progress-wrap:hover .scene-progress-fill::after,
+    .scene-progress-wrap.dragging .scene-progress-fill::after {
+      opacity: 1;
+      animation: progressMarkerPulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes progressMarkerPulse {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0.45; }
+    }

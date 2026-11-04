@@ -1,0 +1,3188 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+
+    .sr-only {
+      position: absolute; width: 1px; height: 1px;
+      overflow: hidden; clip: rect(0 0 0 0);
+    }
+
+    /* 12.9인치 가로 기준 스테이지 (1366 x 1024) — 다른 비율 기기에서는 중앙 배치 및 레터박스(검정) */
+    .stage {
+      position: absolute;
+      left: 50%; top: 50%;
+      width: 1366px; height: 1024px;
+      overflow: visible;
+      background: #000000;
+      transform-origin: center center;
+      transform: translate(-50%, -50%) scale(var(--scale, 1));
+    }
+
+    /* 화면 바깥으로 나간 그래픽을 완벽하게 가려주는 최상단 블랙 마스킹 레이어 (2000px 블랙 테두리) */
+    .stage::after {
+      content: '';
+      position: absolute;
+      inset: -2000px;
+      border: 2000px solid #000000;
+      pointer-events: none;
+      z-index: 999999;
+    }
+    .stage-black-mask {
+      position: absolute;
+      background: #000000;
+      pointer-events: none;
+      z-index: 999999;
+    }
+    .stage-black-mask.mask-right {
+      left: 1366px;
+      top: -2000px;
+      width: 4000px;
+      height: 6000px;
+    }
+    .stage-black-mask.mask-left {
+      right: 1366px;
+      top: -2000px;
+      width: 4000px;
+      height: 6000px;
+    }
+    .stage-black-mask.mask-top {
+      left: -2000px;
+      bottom: 1024px;
+      width: 6000px;
+      height: 4000px;
+    }
+    .stage-black-mask.mask-bottom {
+      left: -2000px;
+      top: 1024px;
+      width: 6000px;
+      height: 4000px;
+    }
+
+    /* 각 장면 공통 */
+    .scene {
+      position: absolute; inset: 0;
+      overflow: hidden;
+      will-change: transform;
+      backface-visibility: hidden;
+      transform: translate3d(0, 0, 0);
+    }
+
+    .scene .bg {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      display: block;
+    }
+
+    /* 전환: 위로 슬라이드 (부드럽고 빠른 1.6s 커튼콜) */
+    .scene.slide-up-out {
+      animation: slideUpOut 1.6s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+      z-index: 10;
+    }
+    @keyframes slideUpOut {
+      from { transform: translate3d(0, 0, 0); }
+      to   { transform: translate3d(0, -100%, 0); }
+    }
+
+    
+    /* 대화창 전용 부드러운 페이드 인 */
+    .dialog-fade-in {
+      animation: dialogFadeIn 0.6s ease forwards;
+    }
+    @keyframes dialogFadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    /* 전환: 페이드 (2분 무입력 시 대기화면 복귀) */
+    .scene.fade-in {
+      animation: fadeIn 0.8s ease forwards;
+      z-index: 10;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    /* ========== 대기화면(0번 장면 / Scene 1): 외벽 꽃 3개 살랑임 ========== */
+    .flower {
+      position: absolute;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .f1, .flower.f1 { left: 957px; top: 178px; width: 219.5px; height: 229.5px; }
+    .f2, .flower.f2 { left: 949px; top: 443px; width: 133px;   height: 145px;   }
+    .f3, .flower.f3 { left: 985px; top: 615px; width: 172px;   height: 181px;   }
+
+    .flower img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      transform-origin: 50% 50%;
+      animation: s01sway 2s steps(25) infinite alternate;
+      backface-visibility: hidden;
+      will-change: transform;
+    }
+
+    .f1 img, .flower.f1 img { --a: -5deg;   --b: 4deg; }
+    .f2 img, .flower.f2 img { --a: 6deg;    --b: -4deg; }
+    .f3 img, .flower.f3 img { --a: -3.5deg; --b: 5.5deg; }
+
+    @keyframes s01sway {
+      from { transform: rotate(var(--a)) translateZ(0); }
+      to   { transform: rotate(var(--b)) translateZ(0); }
+    }
+
+    /* ========== 2장면: 비 내리는 책방 및 텍스트 ========== */
+    .scene-02 .rain {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 1; /* 곱하기 투명도 레이어(.veil) 아래에 위치 */
+    }
+
+    .scene-02 .veil {
+      position: absolute; inset: 0;
+      background: #453E72;
+      opacity: 0.9;
+      mix-blend-mode: multiply;
+      transition: opacity 2.4s ease;
+      z-index: 2; /* 빗줄기 위에 위치하여 곱하기 블렌드 효과 적용 */
+    }
+    .scene-02 .veil.gone { opacity: 0; }
+
+    @font-face {
+      font-family: 'DungGeunMo';
+      src: url('04_filters_fonts/DungGeunMo.otf') format('opentype');
+    }
+
+    .scene-02 .guide-text {
+      position: absolute;
+      left: 0; right: 0; top: 50%;
+      transform: translateY(-50%);
+      font-family: 'DungGeunMo', monospace;
+      font-size: 42px;
+      line-height: 1.6;
+      color: #615CB7;
+      text-align: center;
+      white-space: nowrap;
+      user-select: none;
+      pointer-events: none;
+      transition: opacity 2.4s ease;
+      z-index: 3;
+    }
+    .scene-02 .guide-text.gone { opacity: 0; }
+    .scene-02 .guide-text .ch {
+      display: inline-block;
+      visibility: hidden;
+    }
+    .scene-02 .guide-text .ch.on { visibility: visible; }
+
+    /* ========== 3장면: 책방 앞 + 초록 대화창 & 대사 타이핑 ========== */
+    .scene-03 .rain {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+    }
+
+    /* ========== 대화창 공통 스타일 & 텍스트 규칙 (가장 상단 레이어) ========== */
+    .dialog-wrap {
+      position: absolute;
+      left: 0;
+      right: -6px; /* 서브픽셀 렌더링 틈새를 완벽히 덮어 뒤편 그래픽/팔 노출 원천 차단 */
+      bottom: 0;
+      width: calc(100% + 6px);
+      height: 216px;
+      z-index: 100; /* 최상단 레이어 */
+      pointer-events: none;
+    }
+
+    .dialog-wrap .dialog-bg {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      display: block;
+    }
+
+    .dialog-wrap .dialog-text {
+      position: absolute;
+      left: 65px; right: 65px; top: 0; bottom: 0;
+      display: flex;
+      align-items: center;
+      font-family: 'DungGeunMo', monospace;
+      font-size: 48px;
+      letter-spacing: -0.5px;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .dialog-wrap .dialog-body {
+      color: #FFFAE1;
+    }
+
+    .dialog-wrap .ch {
+      display: inline-block;
+      visibility: hidden;
+    }
+    .dialog-wrap .ch.on {
+      visibility: visible;
+    }
+    .dialog-wrap .ch.dim {
+      opacity: 0.3;
+    }
+
+    /* 그린 텍스트 규칙 (You: #308DA4) */
+    .dialog-wrap.green .speaker,
+    .scene-03 .speaker,
+    .scene-04 .speaker,
+    .scene-09 .speaker,
+    .scene-10 .speaker,
+    .scene-12 .speaker,
+    .scene-13 .speaker,
+    .scene-16 .speaker,
+    .scene-23 .speaker,
+    .scene-24 .speaker,
+    .scene-29 .speaker,
+    .scene-30 .speaker,
+    .scene-32 .speaker,
+    .scene-33 .speaker,
+    .scene-17 .speaker,
+    .scene-37 .speaker,
+    .scene-41 .speaker,
+    .scene-42 .speaker,
+    .scene-44 .speaker {
+      color: #308DA4;
+      margin-right: 14px;
+    }
+
+    /* 레드 텍스트 규칙 (P: #D13D79) */
+    .dialog-wrap.red .speaker,
+    .scene-05 .speaker,
+    .scene-06 .speaker,
+    .scene-26 .speaker,
+    .scene-07 .speaker,
+    .scene-08 .speaker,
+    .scene-11 .speaker,
+    .scene-13 .speaker,
+    .scene-14 .speaker,
+    .scene-15 .speaker,
+    .scene-18 .speaker,
+    .scene-38 .speaker,
+    .scene-19 .speaker,
+    .scene-39 .speaker,
+    .scene-20 .speaker,
+    .scene-40 .speaker,
+    .scene-01 .speaker,
+    .scene-21 .speaker,
+    .scene-25 .speaker,
+    .scene-27 .speaker,
+    .scene-28 .speaker,
+    .scene-31 .speaker,
+    .scene-34 .speaker,
+    .scene-35 .speaker,
+    .scene-36 .speaker,
+    .scene-41 .speaker,
+    .scene-42 .speaker,
+    .scene-43 .speaker {
+      color: #D13D79;
+      margin-right: 14px;
+    }
+
+    /* 퍼플 텍스트 규칙 및 보라색 대화창 배경 채움 (오른쪽 잘림 방지) */
+    .dialog-wrap.purple {
+      background: linear-gradient(
+        to bottom,
+        #702188 0px,
+        #702188 34px,
+        #4C105E 34px,
+        #4C105E 182px,
+        #702188 182px,
+        #702188 216px
+      );
+    }
+    .dialog-wrap.purple .dialog-bg {
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+    }
+    .dialog-wrap.purple .speaker {
+      color: #615CB7;
+      margin-right: 14px;
+    }
+
+    
+    
+    /* S2 2장면 / 22장면: 형광등 깜빡거리며 켜지는 필터 (1366*809, #1D123D -> 투명도 0%) */
+    .scene-02 .scene-flicker-filter,
+    .scene-22 .scene-flicker-filter {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1366px;
+      height: 809px;
+      background-color: #1D123D;
+      mix-blend-mode: multiply;
+      pointer-events: none;
+      z-index: 45;
+      opacity: 0.90; /* 대사 나오는 동안 기본 어두운 방 유지 */
+    }
+
+    .scene-02.flicker-active .scene-flicker-filter,
+    .scene-22.flicker-active .scene-flicker-filter,
+    .flicker-active .scene-flicker-filter {
+      animation: fluorescentFlicker 1.8s step-end forwards;
+    }
+
+    .scene-02 .lamp-flare,
+    .scene-22 .lamp-flare {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1366px;
+      height: 809px;
+      background-color: #FFFDE8;
+      pointer-events: none;
+      z-index: 46;
+      opacity: 0;
+    }
+
+    .scene-02.flicker-active .lamp-flare,
+    .scene-22.flicker-active .lamp-flare,
+    .flicker-active .lamp-flare {
+      animation: lampFlare 1.8s step-end forwards;
+    }
+
+    @keyframes fluorescentFlicker {
+      /* 어둑어둑한 분위기 유지 */
+      0%   { opacity: 0.90; }
+      12%  { opacity: 0.90; }
+
+      /* 1차 미세 깜빡: 어둠 속에서 켜질랑말랑 살짝 꿈틀 (0.78) */
+      18%  { opacity: 0.78; }
+      24%  { opacity: 0.90; }
+
+      /* 2차 켜질랑말랑: 조금 더 반응 (0.65) */
+      40%  { opacity: 0.65; }
+      45%  { opacity: 0.88; }
+
+      /* 3차 전압 상승: 반쯤 깜빡 (0.45) */
+      55%  { opacity: 0.45; }
+      60%  { opacity: 0.78; }
+
+      /* 4차 지직- 연속 스파크 (0.25 -> 0.58 -> 0.12) */
+      68%  { opacity: 0.25; }
+      73%  { opacity: 0.58; }
+      78%  { opacity: 0.12; }
+      82%  { opacity: 0.35; }
+
+      /* 5차 점등 완료! 완전히 불 켜짐 */
+      88%  { opacity: 0.00; }
+      93%  { opacity: 0.10; } /* 전구 잔여 미세 진동 */
+      97%  { opacity: 0.00; }
+      100% { opacity: 0.00; } /* 영구 밝음 유지 */
+    }
+
+    @keyframes lampFlare {
+      /* 초반 어둑어둑할 때는 섬광 없음 */
+      0%   { opacity: 0; }
+      67%  { opacity: 0; }
+
+      /* 4차 스파크 시 미세 섬광 */
+      78%  { opacity: 0.08; }
+      82%  { opacity: 0; }
+
+      /* 5차 본격 점등 시 찰나의 전등 빛 퍼짐 */
+      88%  { opacity: 0.25; }
+      94%  { opacity: 0; }
+      100% { opacity: 0; }
+    }
+
+    /* 21장면 전용 필터 (1366*809 대화창 비침범 직사각형, #1D123D, multiply 90%) */
+    .scene-01 .scene-21-filter,
+    .scene-21 .scene-21-filter {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1366px;
+      height: 809px;
+      background-color: #1D123D;
+      opacity: 0.9;
+      mix-blend-mode: multiply;
+      pointer-events: none;
+      z-index: 45;
+    }
+
+    /* ========== S2 전체 장면 공통 컬러 필터 레이어 (#E8CBFF, 50%, multiply) ========== */
+    .scene-color-filter {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1366px;
+      height: 1024px;
+      background-color: #E8CBFF;
+      opacity: 0.5;
+      mix-blend-mode: multiply;
+      pointer-events: none;
+      z-index: 50; /* 대화창(z-index: 100) 바로 아래, 씬 내 그래픽/모션 요소 최상단 */
+    }
+    .scene-color-filter.with-dialog,
+    .scene:has(.dialog-wrap) .scene-color-filter {
+      height: 809px; /* 하단 대사 영역을 제외한 상단 채움 (1366*809) */
+    }
+
+    /* ========== 4장면: 노크 장면 (배경, 도어 슬라이드, arm 마우스 커서, 타이핑) ========== */
+    .scene-04 {
+      cursor: none; /* 실제 마우스 커서 숨김 */
+    }
+
+    .rain {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+    }
+
+    .scene-04 .rain,
+    .scene-05 .rain,
+    .scene-06 .rain,
+    .scene-11 .rain {
+      z-index: 2; /* 꽃 레이어(z-index: 1) 위에서 비가 가림 없이 내리도록 설정 */
+    }
+
+    /* 4장면, 5장면, 6장면: 3장면(03.png) 꽃 위치와 100% 동일하게 일치시키는 꽃 레이어 */
+    .flowers-layer {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .flowers-layer .flower-strip {
+      position: absolute;
+      top: 0; bottom: 0;
+      overflow: hidden;
+    }
+    .flowers-layer .flower-strip.left {
+      left: 0;
+      width: 376px;
+    }
+    .flowers-layer .flower-strip.right {
+      left: 925px;
+      width: 441px;
+    }
+    .flowers-layer .flower-strip img {
+      position: absolute;
+      top: 0;
+      width: 1366px;
+      height: 1024px;
+      display: block;
+    }
+    .flowers-layer .flower-strip.left img {
+      left: 0;
+    }
+    .flowers-layer .flower-strip.right img {
+      left: -925px;
+    }
+
+    /* 7장면, 8장면, 9장면: 비둘기 날개 (몸통 기준 안쪽 고정점, 위아래 살짝 날갯짓) */
+    .pigeon-wing {
+      position: absolute;
+      width: 313.5px;
+      height: 278.5px;
+      z-index: 2;
+      pointer-events: none;
+      will-change: transform;
+    }
+    .pigeon-wing img {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .pigeon-wing.left {
+      left: 165px;
+      top: 430px;
+      transform-origin: 90% 45%;
+      animation: wingFlapLeft 1.44s steps(18) infinite alternate;
+    }
+    .pigeon-wing.right {
+      right: 165px;
+      top: 430px;
+      transform-origin: 10% 45%;
+      animation: wingFlapRight 1.44s steps(18) infinite alternate;
+    }
+    @keyframes wingFlapLeft {
+      0%   { transform: rotate(-5deg); }
+      100% { transform: rotate(5deg); }
+    }
+    @keyframes wingFlapRight {
+      0%   { transform: rotate(5deg); }
+      100% { transform: rotate(-5deg); }
+    }
+
+    /* 4장면 슬라이딩 도어 (24프레임 전개) */
+    .scene-04 .door {
+      position: absolute;
+      left: 619.24px; top: 97.91px;
+      z-index: 3;
+      cursor: none;
+      transition: transform 2.0s steps(48);
+      will-change: transform;
+    }
+    .scene-04 .door img {
+      display: block;
+      width: auto;
+      height: auto;
+    }
+    .scene-04 .door.opened {
+      transform: translateX(-241.21px); /* x619.24 -> x378.03 으로 슬라이딩 이동 */
+    }
+
+    /* 건물 간판 정정 레이어 (知花冊房) */
+    .sign-fixed {
+      position: absolute;
+      width: 61px;
+      height: 247px;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .sign-fixed img {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .scene-02 .sign-fixed {
+      left: 924px;
+      top: 235.5px;
+    }
+    .scene-03 .sign-fixed,
+    .scene-04 .sign-fixed,
+    .scene-05 .sign-fixed,
+    .scene-06 .sign-fixed,
+    .scene-11 .sign-fixed {
+      left: 924px;
+      top: 149.5px;
+    }
+
+    /* 15/16장면: 33번 장면 스타일 빈티지 땀방울 꿈틀 모션 (7~8fps 스톱모션 스타일) */
+    .scene-15 .sweat-group,
+    .scene-16 .sweat-group {
+      position: absolute;
+      left: 1086px;
+      top: 148px;
+      width: 161px;
+      height: 121px;
+      transform-origin: 50% 50%;
+      pointer-events: none;
+      z-index: 4;
+      will-change: transform;
+      animation: sweatVintageWriggle 0.72s steps(1) infinite;
+    }
+    .scene-15 .sweat-group img,
+    .scene-16 .sweat-group img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+    }
+
+    /* 5장면, 6장면, 11장면: 이전 장면에서 슬라이딩 완료된 문 유지 (x: 378.03px, y: 97.91px) */
+    .scene-05 .door,
+    .scene-06 .door,
+    .scene-11 .door {
+      position: absolute;
+      left: 378.03px; top: 97.91px;
+      z-index: 3;
+    }
+    .scene-05 .door img,
+    .scene-06 .door img,
+    .scene-11 .door img {
+      display: block;
+      width: auto;
+      height: auto;
+    }
+
+    /* 12장면: 주인공(human) 클로즈업 레이어 및 비 레이어 */
+    .scene-12 .rain {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .scene-12 .human {
+      position: absolute;
+      right: 0; top: 0;
+      width: 1313px;
+      height: 1024px;
+      pointer-events: none;
+      z-index: 3;
+    }
+    .scene-12 .human img {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* 13장면, 14장면, 15장면: 비 내리는 창가 비둘기 씬 (배경, 비, 비둘기 방 전경, 레드 대화창) */
+    .scene-13 .rain,
+    .scene-14 .rain,
+    .scene-15 .rain {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .scene-13 .pigeon-room,
+    .scene-14 .pigeon-room,
+    .scene-15 .pigeon-room {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 3;
+    }
+    .scene-13 .pigeon-room img,
+    .scene-14 .pigeon-room img,
+    .scene-15 .pigeon-room img {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* 17장면: 비 내리는 창가 비둘기 씬 (배경, 비, 비둘기 방 전경, 상단 레드 대화창) */
+    .scene-17 .rain {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .scene-17 .pigeon-room {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 3;
+    }
+    .scene-17 .pigeon-room img {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* 18장면: 계단 오르는 비둘기 뒷모습 씬 (진정한 아날로그 스톱모션 12.5fps / step-end 적용) */
+    .scene-18 .pigeon-climber {
+      position: absolute;
+      left: 468px;
+      bottom: 336px;
+      width: 430px;
+      height: 335px;
+      transform-origin: 50% 95%;
+      z-index: 5;
+      pointer-events: none;
+      animation: pigeonClimbMiddle 2.24s step-end forwards;
+      animation-delay: 0.35s;
+    }
+    .scene-18 .pigeon-climber .body,
+    .scene-18 .pigeon-climber .wing {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .scene-18 .pigeon-climber img {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .scene-18 .pigeon-climber .wing.left {
+      transform-origin: 28% 50%;
+      animation: flapLeft 0.32s step-end 6 forwards;
+      animation-delay: 0.35s;
+    }
+    .scene-18 .pigeon-climber .wing.right {
+      transform-origin: 72% 50%;
+      animation: flapRight 0.32s step-end 6 forwards;
+      animation-delay: 0.35s;
+    }
+    @keyframes flapLeft {
+      0%   { transform: rotate(0deg); }
+      25%  { transform: rotate(-26deg); }
+      50%  { transform: rotate(24deg); }
+      75%  { transform: rotate(0deg); }
+      100% { transform: rotate(0deg); }
+    }
+    @keyframes flapRight {
+      0%   { transform: rotate(0deg); }
+      25%  { transform: rotate(26deg); }
+      50%  { transform: rotate(-24deg); }
+      75%  { transform: rotate(0deg); }
+      100% { transform: rotate(0deg); }
+    }
+    @keyframes pigeonClimbMiddle {
+      /* 12.5fps 스톱모션 (한 프레임 = 0.08s, 총 28프레임 = 2.24s) */
+      /* 프레임 간 중간 보간 없이 각 프레임이 탁-탁 끊어지며 도약 */
+      /* 0~2프레임: 바닥 준비 동작 */
+      0%   { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+      7%   { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+
+      /* 1번째 칸 도약 (3~7프레임): 발을 떼고 1단 위로 톡 뜀 */
+      11%  { transform: translate3d(0, -45px, 0) scale(0.97); opacity: 1; }
+      14%  { transform: translate3d(0, -115px, 0) scale(0.93); opacity: 1; }
+      18%  { transform: translate3d(0, -155px, 0) scale(0.90); opacity: 1; }
+      21%  { transform: translate3d(0, -135px, 0) scale(0.89); opacity: 1; }
+      25%  { transform: translate3d(0, -121px, 0) scale(0.88); opacity: 1; }
+
+      /* 1단 위 안착 및 호흡 (8~11프레임) */
+      29%  { transform: translate3d(0, -121px, 0) scale(0.88); opacity: 1; }
+      39%  { transform: translate3d(0, -121px, 0) scale(0.88); opacity: 1; }
+
+      /* 2번째 칸 도약 (12~16프레임): 중간 계단으로 톡 뜀 */
+      43%  { transform: translate3d(0, -165px, 0) scale(0.85); opacity: 1; }
+      46%  { transform: translate3d(0, -235px, 0) scale(0.82); opacity: 1; }
+      50%  { transform: translate3d(0, -275px, 0) scale(0.79); opacity: 1; }
+      54%  { transform: translate3d(0, -255px, 0) scale(0.78); opacity: 1; }
+      57%  { transform: translate3d(0, -243px, 0) scale(0.78); opacity: 1; }
+
+      /* 대사 출력 타이밍에 맞춰 계단 중간에 정지 유지 (17~28프레임) */
+      61%  { transform: translate3d(0, -243px, 0) scale(0.78); opacity: 1; }
+      100% { transform: translate3d(0, -243px, 0) scale(0.78); opacity: 1; }
+    }
+
+    /* arm 커서 (두 배 축소: 1230x1290, 살구색 주먹 중심 초점 유지, 오른쪽 등장) */
+    .scene-04 .arm-cursor {
+      position: absolute;
+      left: 1120px; top: 500px;
+      width: 1230px;
+      height: 1290px;
+      pointer-events: none;
+      z-index: 10;
+      transform: translate(-30.5%, -18.5%);
+      will-change: transform, left, top;
+    }
+    .scene-04 .arm-cursor img {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* 노크 모션: 주먹으로 톡톡 두드리는 리듬감 있는 모션 (12.5fps 스톱모션) */
+    .scene-04 .arm-cursor.knocking {
+      animation: knockMotion 0.56s steps(7);
+    }
+    @keyframes knockMotion {
+      0%   { transform: translate(-30.5%, -18.5%) scale(1); }
+      20%  { transform: translate(-33%, -22%) scale(0.92) rotate(-4deg); }
+      40%  { transform: translate(-28%, -15%) scale(1.08) rotate(3deg); }
+      60%  { transform: translate(-32%, -20%) scale(0.95) rotate(-2deg); }
+      80%  { transform: translate(-28%, -15%) scale(1.08) rotate(3deg); }
+      100% { transform: translate(-30.5%, -18.5%) scale(1); }
+    }
+      /* S2 6장면: 사다리를 든 비둘기 단순화된 2컷 앞뒤 까딱 스톱모션 */
+    .scene-06 .ladder-pigeon-carrier,
+    .scene-26 .ladder-pigeon-carrier {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 790.5px;
+      height: 1054px;
+      transform: translate3d(930.49px, -171.36px, 0);
+      pointer-events: none;
+      z-index: 15;
+      /* 이동 컷수 단순화: 10단계로 쿵- 쿵- 큼직하게 전진 */
+      transition: transform 2.6s steps(10, end);
+      will-change: transform;
+    }
+    .scene-06 .ladder-pigeon-img,
+    .scene-26 .ladder-pigeon-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transform-origin: 30% 90%; /* 발/사다리 밑동 축 */
+    }
+    .scene-06.ladder-moving .ladder-pigeon-carrier,
+    .scene-26.ladder-moving .ladder-pigeon-carrier {
+      transform: translate3d(388.87px, -144.73px, 0);
+    }
+    .scene-06.ladder-moving .ladder-pigeon-img,
+    .scene-26.ladder-moving .ladder-pigeon-img {
+      /* 중간 보간 없이 2컷만으로 딱-딱 앞뒤 까딱이는 단순화된 루프 (step-end) */
+      animation: ladderPigeonRock 0.52s step-end infinite;
+    }
+    .ladder-pigeon-carrier.arrived {
+      transform: translate3d(388.87px, -144.73px, 0) !important;
+      transition: none !important;
+    }
+    .ladder-pigeon-carrier.arrived .ladder-pigeon-img {
+      animation: none !important;
+      transform: none !important;
+    }
+    @keyframes ladderPigeonRock {
+      0% {
+        transform: translate3d(0, 0, 0) rotate(-2.5deg);
+      }
+      50% {
+        transform: translate3d(0, -10px, 0) rotate(3deg);
+      }
+    }
+
+      /* 비둘기 눈썹 독립 레이어 (페이드아웃 없이 즉시바뀜) */
+    .pigeon-eyebrows,
+    .instant-eyebrow-clone {
+      position: absolute;
+      left: 320px;
+      top: 535px;
+      width: 145px;
+      height: 21.25px;
+      object-fit: contain;
+      pointer-events: none;
+      z-index: 25;
+    }
+    .instant-eyebrow-clone {
+      z-index: 35;
+      opacity: 1 !important;
+    }
+
+  
+    /* 장면 번호 표시: '현재장면/총장면수' (DungGeunMo, #0000, 곱하기, 투명도 20, 18px)
+       대화창 맨 아래 줄 또는 대화창 없는 화면의 동일 위치(가장 상단 레이어)에 배치 */
+    .scene-counter {
+      position: absolute;
+      right: 14px;
+      bottom: 8px;
+      line-height: 1;
+      font-family: 'DungGeunMo', monospace;
+      font-size: 18px;
+      color: #000000;
+      opacity: 0.20;
+      mix-blend-mode: multiply;
+      pointer-events: none;
+      z-index: 100;
+      user-select: none;
+    }
+    .dialog-wrap .scene-counter {
+      right: 20px; /* .dialog-wrap의 right: -6px 확장에 맞춘 스테이지 기준 14px 완벽 일치 */
+    }
+
+    /* 8장면(28/70) & 9장면(29/70): 배경 및 비둘기 사다리 모션 */
+    .scene-08 .bg-wrap,
+    .scene-09 .bg-wrap,
+    .scene-28 .bg-wrap,
+    .scene-29 .bg-wrap {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      overflow: hidden;
+    }
+
+    /* 8장면 & 9장면 비둘기 바닥 안착 위치 (28->29 전환 시 1픽셀도 흔들림 없는 완벽 일치) */
+    .scene-08 .ladder-climber-pigeon,
+    .scene-09 .ladder-climber-pigeon,
+    .scene-28 .ladder-climber-pigeon,
+    .scene-29 .ladder-climber-pigeon {
+      position: absolute;
+      left: 307px;
+      top: 493px;
+      width: 331px;
+      height: 258.5px;
+      pointer-events: none;
+      z-index: 5;
+      transform-origin: 50% 100%;
+      transform: translate3d(0, 0, 0);
+      will-change: transform;
+    }
+    .scene-08 .ladder-climber-pigeon img,
+    .scene-09 .ladder-climber-pigeon img,
+    .scene-28 .ladder-climber-pigeon img,
+    .scene-29 .ladder-climber-pigeon img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+    }
+    .scene-09.jumping .ladder-climber-pigeon,
+    .scene-29.jumping .ladder-climber-pigeon {
+      animation: pigeonHopJump 0.64s step-end forwards;
+    }
+    .scene-09.jumped .ladder-climber-pigeon,
+    .scene-29.jumped .ladder-climber-pigeon {
+      transform: translate3d(0, -267.25px, 0) !important;
+      animation: none !important;
+    }
+
+    @keyframes pigeonHopJump {
+      /* 12.5fps 스톱모션 (위로 톡 점프하여 나무 발받침 바로 위에 안착 - 31페이지와 동일 위치) */
+      /* 0~1프레임: 하단 출발 위치 */
+      0%   { transform: translate3d(0, 0, 0); }
+      12%  { transform: translate3d(0, 0, 0); }
+
+      /* 2프레임: 도약 직전 움츠림 반동 */
+      13%  { transform: translate3d(0, 8px, 0); }
+      25%  { transform: translate3d(0, 8px, 0); }
+
+      /* 3~4프레임: 위로 힘차게 톡 도약 */
+      26%  { transform: translate3d(0, -90px, 0); }
+      37%  { transform: translate3d(0, -90px, 0); }
+
+      /* 5~6프레임: 공중 상승 */
+      38%  { transform: translate3d(0, -210px, 0); }
+      50%  { transform: translate3d(0, -210px, 0); }
+
+      /* 7~8프레임: 발받침 살짝 윗선 정점 도달 */
+      51%  { transform: translate3d(0, -282px, 0); }
+      65%  { transform: translate3d(0, -282px, 0); }
+
+      /* 9프레임: 발받침 위 착지 하강 */
+      66%  { transform: translate3d(0, -265px, 0); }
+      80%  { transform: translate3d(0, -265px, 0); }
+
+      /* 10~11프레임: 나무 발받침 바로 위에 두 발 완벽 안착 (31페이지 발 위치 일치) */
+      81%  { transform: translate3d(0, -267.25px, 0); }
+      100% { transform: translate3d(0, -267.25px, 0); }
+    }
+
+    /* 10장면 (30번 장면): 비둘기 로즈마리 화분 보며 책 주섬주섬 꺼내담는 양 날개 모션 (빈티지 12.5fps 스톱모션) */
+    .scene-10     /* 30번, 31번 장면: 사다리 위 비둘기 및 날개/책 공통 레이아웃 */
+    .rosemary-pigeon-wrap,
+    .scene-10 .rosemary-pigeon-wrap,
+    .scene-30 .rosemary-pigeon-wrap,
+    .scene-11 .rosemary-pigeon-wrap,
+    .scene-31 .rosemary-pigeon-wrap {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    /* 31번 장면: 비둘기 품에 안기는 책들 (A, B, C, D) - 배경 위, 비둘기 날개/몸통 아래 레이어 */
+    .rosemary-books,
+    .scene-11 .rosemary-books,
+    .scene-31 .rosemary-books {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    .rosemary-book,
+    .scene-11 .rosemary-book,
+    .scene-31 .rosemary-book {
+      position: absolute;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      display: block;
+      object-fit: contain;
+    }
+
+    .rosemary-book.on,
+    .scene-11 .rosemary-book.on,
+    .scene-31 .rosemary-book.on {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* 31번 기준 책 레이어 순서: 하위 책A, 책D (z: 3) / 상위 책C, 책B (z: 4) */
+    .rosemary-book.book-a {
+      left: 387.04px;
+      top: 272.96px;
+      width: 95.5px;
+      height: 129.75px;
+      z-index: 3;
+    }
+
+    .rosemary-book.book-d {
+      left: 474.51px;
+      top: 275.63px;
+      width: 82px;
+      height: 101px;
+      z-index: 3;
+    }
+
+    .rosemary-book.book-c {
+      left: 370.5px;
+      top: 283.04px;
+      width: 113.75px;
+      height: 126.75px;
+      z-index: 4;
+    }
+
+    .rosemary-book.book-b,
+    .scene-11 .rosemary-book.book-b,
+    .scene-31 .rosemary-book.book-b,
+    .scene-12 .rosemary-book.book-b,
+    .scene-32 .rosemary-book.book-b {
+      left: 422.8px;
+      top: 267.62px;
+      width: 150.25px;
+      height: 148.25px;
+      z-index: 4;
+    }
+
+    /* 비둘기 양 날개 (최하단 배경 위, 몸통 아래 레이어) */
+    .pigeon-wing,
+    .scene-10 .pigeon-wing,
+    .scene-30 .pigeon-wing,
+    .scene-11 .pigeon-wing,
+    .scene-31 .pigeon-wing {
+      position: absolute;
+      left: 360px;
+      top: 274.25px;
+      width: 226.75px;
+      height: 132px;
+      z-index: 5;
+      will-change: transform;
+      pointer-events: none;
+    }
+
+    .pigeon-wing img,
+    .scene-10 .pigeon-wing img,
+    .scene-30 .pigeon-wing img,
+    .scene-11 .pigeon-wing img,
+    .scene-31 .pigeon-wing img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+    }
+
+    /* 비둘기 몸통 - 최상단 레이어 (날개 위) */
+    .pigeon-body,
+    .scene-10 .pigeon-body,
+    .scene-30 .pigeon-body,
+    .scene-11 .pigeon-body,
+    .scene-31 .pigeon-body {
+      position: absolute;
+      left: 393px;
+      top: 215.25px;
+      width: 160.25px;
+      height: 268.25px;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .pigeon-body img,
+    .scene-10 .pigeon-body img,
+    .scene-30 .pigeon-body img,
+    .scene-11 .pigeon-body img,
+    .scene-31 .pigeon-body img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+    }
+
+    /* 30번 장면: 29장면에서 벌린 날개 -> 30장면 접힌 날개로 전환 모션 (고정점 유지) */
+    .scene-10 .pigeon-wing.wing-left,
+    .scene-30 .pigeon-wing.wing-left {
+      transform-origin: 41% 60%;
+      animation: pigeonWingFoldLeft 0.8s steps(6) forwards;
+    }
+
+    .scene-10 .pigeon-wing.wing-right,
+    .scene-30 .pigeon-wing.wing-right {
+      transform-origin: 59% 60%;
+      animation: pigeonWingFoldRight 0.8s steps(6) forwards;
+    }
+
+    @keyframes pigeonWingFoldLeft {
+      0%   { transform: rotate(-32deg) scale(0.96); }
+      40%  { transform: rotate(-18deg); }
+      75%  { transform: rotate(-6deg); }
+      100% { transform: rotate(0deg); }
+    }
+
+    @keyframes pigeonWingFoldRight {
+      0%   { transform: rotate(32deg) scale(0.96); }
+      40%  { transform: rotate(18deg); }
+      75%  { transform: rotate(6deg); }
+      100% { transform: rotate(0deg); }
+    }
+
+    /* 31번 장면: 비둘기 품에 책 담는 날갯짓 (완전 대칭 + 고정점 유지, 1회 왕복 당 0.85s 주기) */
+    .scene-11 .pigeon-wing.wing-left,
+    .scene-31 .pigeon-wing.wing-left,
+    .rosemary-pigeon-wrap.packing .pigeon-wing.wing-left {
+      transform-origin: 41% 60%;
+      animation: pigeonPackBooksLeft 0.85s steps(6) infinite;
+    }
+
+    .scene-11 .pigeon-wing.wing-right,
+    .scene-31 .pigeon-wing.wing-right,
+    .rosemary-pigeon-wrap.packing .pigeon-wing.wing-right {
+      transform-origin: 59% 60%;
+      animation: pigeonPackBooksRight 0.85s steps(6) infinite;
+    }
+
+    /* 책을 모두 담은 후 날개 모션 완전 정지 */
+    .scene-11.books-packed .pigeon-wing,
+    .scene-31.books-packed .pigeon-wing,
+    .rosemary-pigeon-wrap.books-packed .pigeon-wing {
+      animation: none !important;
+      transform: rotate(0deg) !important;
+    }
+
+    @keyframes pigeonPackBooksLeft {
+      0%, 100% { transform: rotate(0deg); }
+      35%      { transform: rotate(-18deg); }
+      70%      { transform: rotate(-8deg); }
+    }
+
+    @keyframes pigeonPackBooksRight {
+      0%, 100% { transform: rotate(0deg); }
+      35%      { transform: rotate(18deg); }
+      70%      { transform: rotate(8deg); }
+    }
+
+    
+
+
+    /* 13장면 (33번 장면: 인간 갸우뚱 모션 + 빈티지 땀방울 꿈틀 모션) */
+    .scene-13 .bg-wrap,
+    .scene-33 .bg-wrap {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* 인간 머리 에셋 (스타트: x168 y-344 -> 0.3초 고정 후 목 고정점을 유지한 채 우측 갸우뚱) */
+    .scene-33-head,
+    .scene-13 .scene-33-head,
+    .scene-33 .scene-33-head {
+      position: absolute;
+      left: 168px;
+      top: -344px;
+      width: 989.5px;
+      height: 830.5px;
+      transform-origin: 50% 91%;
+      pointer-events: none;
+      z-index: 10;
+      will-change: transform;
+      animation: humanHeadCock 1.3s step-end forwards;
+    }
+
+    .scene-33-head img,
+    .scene-13 .scene-33-head img,
+    .scene-33 .scene-33-head img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+    }
+
+    .tilted .scene-33-head,
+    .scene-13.tilted .scene-33-head,
+    .scene-33.tilted .scene-33-head {
+      transform: rotate(7.5deg) !important;
+      animation: none !important;
+    }
+
+    @keyframes humanHeadCock {
+      /* 0~0.50s (0~38.5%): 33번 장면 전환 후 약 0.5초간 스타트 위치(0도) 유지 */
+      0%, 38.5% {
+        transform: rotate(0deg);
+      }
+      /* 0.50s~1.30s (38.5~100%): 기울임 진행 속도를 완화하여(0.8초간 12단계) 차분하고 자연스럽게 갸우뚱 */
+      38.6%, 43.6% {
+        transform: rotate(0.6deg);
+      }
+      43.7%, 48.7% {
+        transform: rotate(1.3deg);
+      }
+      48.8%, 53.8% {
+        transform: rotate(2.1deg);
+      }
+      53.9%, 59.0% {
+        transform: rotate(3.0deg);
+      }
+      59.1%, 64.1% {
+        transform: rotate(3.9deg);
+      }
+      64.2%, 69.2% {
+        transform: rotate(4.8deg);
+      }
+      69.3%, 74.3% {
+        transform: rotate(5.6deg);
+      }
+      74.4%, 79.5% {
+        transform: rotate(6.3deg);
+      }
+      79.6%, 84.6% {
+        transform: rotate(6.8deg);
+      }
+      84.7%, 89.7% {
+        transform: rotate(7.2deg);
+      }
+      89.8%, 94.8% {
+        transform: rotate(7.4deg);
+      }
+      94.9%, 100% {
+        transform: rotate(7.5deg);
+      }
+    }
+
+        
+    /* ==============================================================
+       36번 장면: 35번 위치(비둘기)에서 액자들로 카메라 이동(팬) 연출
+       (Start: translate3d(-491.5px, -280.7px, 0) scale(2.0) -- 35번 라스트 지점과 100% 완벽 일치
+        Stop:  translate3d(-2221.52px, -617.36px, 0) scale(3.7108))
+       ============================================================== */
+    .scene-16 .scene-36-pan-wrap,
+    .scene-36 .scene-36-pan-wrap {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .scene-16 .bg-pan,
+    .scene-36 .bg-pan {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform-origin: 0 0;
+      transform: translate3d(-491.5px, -280.7px, 0) scale(2.0);
+      will-change: transform;
+    }
+
+    .scene-16.camera-moving .bg-pan,
+    .scene-36.camera-moving .bg-pan {
+      transform: translate3d(-2221.52px, -617.36px, 0) scale(3.7108);
+      transition: transform 2.2s steps(16, end);
+    }
+
+    .scene-16.camera-settled .bg-pan,
+    .scene-36.camera-settled .bg-pan {
+      transform: translate3d(-2221.52px, -617.36px, 0) scale(3.7108) !important;
+      transition: none !important;
+    }
+
+    /* 36번 장면: 카메라 확대/이동 중 레드 대화창 숨김 (풀화면 연출), 이동 완료 후 대화창 등장 */
+    .scene-16 .dialog-wrap,
+    .scene-36 .dialog-wrap {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .scene-16.camera-settled .dialog-wrap,
+    .scene-36.camera-settled .dialog-wrap {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* ==============================================================
+       35번 장면: 34번 배경에서 비둘기 클로즈업으로 줌인 확대 연출
+       (카메라 줌렌즈 당기듯 16단계 스텝 줌인: 2.2초, steps(16, end))
+       ============================================================== */
+    .scene-15 .scene-35-zoom-wrap,
+    .scene-35 .scene-35-zoom-wrap {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .scene-15 .bg-start,
+    .scene-35 .bg-start {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform-origin: 0 0;
+      transform: translate3d(-215.25px, -75.56px, 0) scale(1.4039);
+      will-change: transform;
+    }
+
+    .scene-15.zooming .bg-start,
+    .scene-35.zooming .bg-start {
+      transform: translate3d(-491.5px, -280.7px, 0) scale(2.0);
+      transition: transform 1.5s steps(15, end);
+    }
+
+    .scene-15.zoomed .bg-start,
+    .scene-35.zoomed .bg-start {
+      transform: translate3d(-491.5px, -280.7px, 0) scale(2.0) !important;
+      transition: none !important;
+    }
+
+    /* 땀방울 빈티지 꿈틀꿈틀 모션 (7~8fps 스톱모션 스타일) */
+    .scene-13 .scene-33-sweat,
+    .scene-33 .scene-33-sweat {
+      position: absolute;
+      left: 170.5px;
+      top: 236px;
+      width: 102px;
+      height: 137px;
+      pointer-events: none;
+      z-index: 15;
+      transform-origin: 50% 50%;
+      will-change: transform;
+      animation: sweatVintageWriggle 0.72s steps(1) infinite;
+    }
+
+    .scene-13 .scene-33-sweat img,
+    .scene-33 .scene-33-sweat img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+    }
+
+    @keyframes sweatVintageWriggle {
+      0%, 100% {
+        transform: translate3d(0, 0, 0) scale(1, 1) rotate(0deg);
+      }
+      20% {
+        transform: translate3d(-0.5px, 0.5px, 0) scale(1.04, 0.96) rotate(-1.5deg);
+      }
+      40% {
+        transform: translate3d(0.5px, -0.5px, 0) scale(0.97, 1.03) rotate(1deg);
+      }
+      60% {
+        transform: translate3d(-0.5px, 0.5px, 0) scale(1.02, 0.98) rotate(-1deg);
+      }
+      80% {
+        transform: translate3d(0.5px, 0.5px, 0) scale(0.98, 1.02) rotate(1.5deg);
+      }
+    }
+
+
+    /* ==============================================================
+       37번 장면: 양손 고정점 중심 좌우 스톱모션(상하 제외) + 느린 빈티지 모션
+       ============================================================== */
+    .scene-17 .scene-37-sweat,
+    .scene-37 .scene-37-sweat {
+      position: absolute;
+      left: 195px;
+      top: 238px;
+      width: 102px;
+      height: 137px;
+      pointer-events: none;
+      z-index: 15;
+      transform-origin: 50% 50%;
+      will-change: transform;
+      animation: sweatVintageWriggle 1.4s steps(1) infinite;
+    }
+    .scene-17 .scene-37-sweat img,
+    .scene-37 .scene-37-sweat img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+    }
+
+    .scene-17 .scene-37-arm-l,
+    .scene-37 .scene-37-arm-l {
+      position: absolute;
+      left: 15px;
+      top: 280px;
+      width: 639px;
+      height: 593.5px;
+      pointer-events: none;
+      z-index: 20;
+      transform-origin: 45% 95%; /* 팔 밑쪽 접지 고정점 */
+      will-change: transform;
+      animation: armVintageBobLeft 0.85s steps(1) infinite;
+    }
+    .scene-17 .scene-37-arm-l img,
+    .scene-37 .scene-37-arm-l img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+    }
+
+    .scene-17 .scene-37-arm-r,
+    .scene-37 .scene-37-arm-r {
+      position: absolute;
+      left: 715px;
+      top: 325px;
+      width: 658.5px;
+      height: 647.5px;
+      pointer-events: none;
+      z-index: 20;
+      transform-origin: 55% 95%; /* 팔 밑쪽 접지 고정점 */
+      will-change: transform;
+      animation: armVintageBobRight 0.85s steps(1) infinite;
+    }
+    .scene-17 .scene-37-arm-r img,
+    .scene-37 .scene-37-arm-r img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+    }
+
+    /* 37번 장면 양팔 모션: 2개 프레임(스타트 <-> 스탑) 왔다갔다 뚝딱뚝딱 빈티지 전환 */
+    @keyframes armVintageBobLeft {
+      0%, 49.9% {
+        transform: rotate(-12deg);
+      }
+      50%, 100% {
+        transform: rotate(9deg);
+      }
+    }
+
+    @keyframes armVintageBobRight {
+      0%, 49.9% {
+        transform: rotate(13deg);
+      }
+      50%, 100% {
+        transform: rotate(-10deg);
+      }
+    }
+
+  
+    /* ==============================================================
+       38번 장면: 책을 든 비둘기 (4x 마스터 1:1 무손실 배치)
+       ============================================================== */
+    .scene-18 .scene-38-pigeon,
+    .scene-38 .scene-38-pigeon {
+      position: absolute;
+      left: 451.75px;
+      top: 317px;
+      width: 515.75px;
+      height: 500.75px;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .scene-18 .scene-38-pigeon img,
+    .scene-38 .scene-38-pigeon img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+    }
+
+  
+    /* ==============================================================
+       39번 장면: 비둘기 우측으로 살짝쿵(약 10.5도) 기울었다가 멈칫 없이 복귀
+       ============================================================== */
+    .scene-19 .scene-39-pigeon,
+    .scene-39 .scene-39-pigeon {
+      position: absolute;
+      left: 451.75px;
+      top: 317px;
+      width: 515.75px;
+      height: 500.75px;
+      pointer-events: none;
+      z-index: 10;
+      transform-origin: 67.4% 88.5%; /* 비둘기 오른발 접지 고정점 */
+      will-change: transform;
+      animation: pigeonShyTilt 1.3s cubic-bezier(0.25, 0.8, 0.35, 1) 0.3s forwards;
+    }
+    .scene-19 .scene-39-pigeon img,
+    .scene-39 .scene-39-pigeon img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+    }
+
+    @keyframes pigeonShyTilt {
+      0% {
+        transform: rotate(0deg);
+      }
+      /* 1. 우측으로 과하지 않게 살짝쿵(10.5도) 기울어짐 */
+      40% {
+        transform: rotate(10.5deg);
+      }
+      /* 2. 멈칫(정체) 없이 즉시 부드럽게 원위치로 복귀 */
+      78% {
+        transform: rotate(-1.2deg);
+      }
+      90% {
+        transform: rotate(0.4deg);
+      }
+      100% {
+        transform: rotate(0deg);
+      }
+    }
+
+
+    /* ==============================================================
+       40번 장면: 책을 든 비둘기 + P 대사 (그래서 한 권도 못 읽었습니다!)
+       ============================================================== */
+    .scene-20 .scene-40-pigeon,
+    .scene-40 .scene-40-pigeon {
+      position: absolute;
+      left: 451.75px;
+      top: 317px;
+      width: 515.75px;
+      height: 500.75px;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .scene-20 .scene-40-pigeon img,
+    .scene-40 .scene-40-pigeon img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+    }
+
+
+    /* ==============================================================
+       41번 장면: 안도의 비둘기 웃는 눈 (41 eyes x625 y169 to y159)
+       ============================================================== */
+    .scene-41-eyes {
+      position: absolute;
+      left: 625px;
+      top: 159px;
+      width: 101px;
+      height: 20px;
+      pointer-events: none;
+      z-index: 10;
+      animation: eyesSquintBob41 1.2s steps(1) infinite;
+    }
+    .scene-41-eyes img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+    }
+    @keyframes eyesSquintBob41 {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(10px);
+      }
+    }
+    /* ==============================================================
+       45번(구 43번) 장면: 카운터 뒤 비둘기 침강 퇴장 (천천히 책상 아래로 가려짐)
+       ============================================================== */
+    .scene-43 .scene-43-well,
+    .scene-44 .scene-43-well,
+    .scene-45 .scene-43-well {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 364px;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .scene-43 .scene-43-pigeon,
+    .scene-44 .scene-43-pigeon,
+    .scene-45 .scene-43-pigeon {
+      position: absolute;
+      left: 388px;
+      top: 72px;
+      width: 570px;
+      height: 412px;
+      pointer-events: none;
+      will-change: transform;
+      transform: translate3d(0, 0, 0);
+      transition: transform 2.4s cubic-bezier(0.35, 0, 0.25, 1);
+    }
+
+    .scene-43.pigeon-down .scene-43-pigeon,
+    .scene-44.pigeon-down .scene-43-pigeon,
+    .scene-45.pigeon-down .scene-43-pigeon {
+      transform: translate3d(0, 310px, 0);
+    }
+
+    /* ==============================================================
+       [S2 46장면 (구 44/45장면)] 책상 위 책 고르기 + arm 마우스 커서 추적 + 보라색 대화창
+       ============================================================== */
+    .dialog-wrap.purple .dialog-body {
+      color: #615CB7;
+    }
+
+    .scene-45 .dialog-text,
+    .scene-46 .dialog-text {
+      font-size: 43px;
+    }
+
+    .scene-44 .books-container,
+    .scene-45 .books-container,
+    .scene-46 .books-container {
+      position: absolute;
+      left: 50%;
+      bottom: 508px; /* 책상 윗면 중앙 상단 배치 (레퍼런스 이미지 기준 y=384/767 -> 516px/1024px) */
+      transform: translateX(-50%);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 46px;
+      z-index: 10;
+    }
+
+    .scene-44 .book-item,
+    .scene-45 .book-item,
+    .scene-46 .book-item {
+      position: relative;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.25, 1);
+      transform-origin: bottom center;
+    }
+
+    .scene-44 .book-item:hover,
+    .scene-45 .book-item:hover,
+    .scene-46 .book-item:hover {
+      transform: translateY(-24px) scale(1.05);
+    }
+
+    .scene-44 .book-cover,
+    .scene-45 .book-cover,
+    .scene-46 .book-cover {
+      width: 100%;
+      height: auto;
+      display: block;
+      position: relative;
+      z-index: 2;
+      pointer-events: auto;
+      filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.35));
+      transition: filter 0.28s cubic-bezier(0.2, 0.8, 0.25, 1);
+    }
+
+    .scene-44 .book-item:hover .book-cover,
+    .scene-45 .book-item:hover .book-cover,
+    .scene-46 .book-item:hover .book-cover {
+      filter: drop-shadow(0px 8px 8px rgba(0, 0, 0, 0.45));
+    }
+
+    .scene-44 .book-item[data-index="1"],
+    .scene-45 .book-item[data-index="1"],
+    .scene-46 .book-item[data-index="1"] { width: 166px; }
+    .scene-44 .book-item[data-index="2"],
+    .scene-45 .book-item[data-index="2"],
+    .scene-46 .book-item[data-index="2"] { width: 126px; }
+    .scene-44 .book-item[data-index="3"],
+    .scene-45 .book-item[data-index="3"],
+    .scene-46 .book-item[data-index="3"] { width: 156px; }
+    .scene-44 .book-item[data-index="4"],
+    .scene-45 .book-item[data-index="4"],
+    .scene-46 .book-item[data-index="4"] { width: 156px; }
+
+    /* arm 마우스 커서: 3번(노크) 장면에 사용한 팔 그래픽, 보라색 대화창(z-index: 100) 아래(z-index: 20)에서 추적 */
+    .scene-44 .arm-cursor,
+    .scene-45 .arm-cursor,
+    .scene-46 .arm-cursor {
+      position: absolute;
+      left: 1120px;
+      top: 500px;
+      width: 1230px;
+      height: 1290px;
+      pointer-events: none;
+      z-index: 20; /* 책(10) 위, 대화창(100) 아래 */
+      transform: translate(-30.5%, -18.5%);
+      will-change: transform, left, top;
+      clip-path: inset(0 0 216px 0); /* 하단 216px 대화창 아래로는 단면 노출 완전 차단 */
+    }
+
+    .scene-44 .arm-cursor img,
+    .scene-45 .arm-cursor img,
+    .scene-46 .arm-cursor img {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* ==============================================================
+       [S2 독서 모드] 책 뷰어 (나무 질감 배경 + 앞/뒷표지 중앙선 분할 배치 + 드롭쉐도우 + 책척도 바)
+       ============================================================== */
+    .scene-reader .scene-counter {
+      display: none !important;
+    }
+
+    .scene-reader .reader-stage {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .scene-reader .book-viewport {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* 중앙선 기준 책 배치:
+       스테이지 1366px x 1024px, 중앙선 x = 683px.
+       앞표지는 중앙선 기준 우측: left: 683px (x: 683 ~ 1218px)
+       뒷표지는 중앙선 기준 좌측: right: 683px (x: 148 ~ 683px)
+       책 크기: 폭 535px, 높이 760px (원본 2117x3007 비율 유지)
+       세로 중앙 정렬: top: 48% (하단 책척도 바 감안)
+    */
+    .scene-reader .book-page {
+      position: absolute;
+      top: 48%;
+      transform: translateY(-50%);
+      height: 760px;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      display: flex;
+      align-items: center;
+    }
+
+    .scene-reader .book-page.book-page-left {
+      right: 683px;
+      justify-content: flex-end;
+    }
+
+    .scene-reader .book-page.book-page-right {
+      left: 683px;
+      justify-content: flex-start;
+    }
+
+    .scene-reader .book-page-img {
+      height: 760px;
+      width: auto;
+      max-width: 560px;
+      display: block;
+      object-fit: contain;
+      filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.35));
+    }
+
+    /* 양쪽 펼침면 중앙 책등(책 골) 입체 그림자 */
+    .scene-reader .book-spine-crease {
+      position: absolute;
+      top: 48%;
+      transform: translateY(-50%);
+      left: 683px;
+      margin-left: -15px;
+      width: 30px;
+      height: 760px;
+      pointer-events: none;
+      z-index: 15;
+      background: linear-gradient(to right,
+        rgba(0, 0, 0, 0) 0%,
+        rgba(0, 0, 0, 0.05) 30%,
+        rgba(0, 0, 0, 0.16) 50%,
+        rgba(0, 0, 0, 0.05) 70%,
+        rgba(0, 0, 0, 0) 100%
+      );
+      display: none;
+    }
+
+    /* 좌/우 클릭 인터랙션 구역 (중앙선 분할) */
+    .scene-reader .reader-zone {
+      position: absolute;
+      top: 0;
+      bottom: 90px; /* 책척도 바 영역 침범 방지 */
+      width: 50%;
+      z-index: 30;
+      user-select: none;
+    }
+
+    .scene-reader .reader-zone.zone-left {
+      left: 0;
+      cursor: pointer;
+    }
+
+    .scene-reader .reader-zone.zone-right {
+      right: 0;
+      cursor: pointer;
+    }
+
+    .scene-reader .reader-zone.zone-right.disabled {
+      cursor: default;
+      pointer-events: none;
+    }
+
+    /* 화면 하단 중앙 '책척도 바' & '책척도' */
+    .scene-reader .reader-progress-wrap {
+      position: absolute;
+      bottom: 37px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 860px;
+      height: 36px; /* 클릭 및 드래그 편의를 위한 히트박스 확장 */
+      z-index: 50;
+      pointer-events: auto;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      user-select: none;
+      touch-action: none;
+    }
+
+    /* 진척바 호버 반응: 살짝 두꺼워지고 밝아짐 → 클릭/드래그 가능함을 안내 (빛 산란 없음) */
+    .scene-reader .reader-progress-wrap:hover .reader-progress-bar,
+    .scene-reader .reader-progress-wrap.dragging .reader-progress-bar {
+      transform: scaleY(1.3);
+      filter: brightness(1.25);
+    }
+
+    .scene-reader .reader-progress-wrap.dragging {
+      cursor: grabbing;
+    }
+
+    /* 마우스 위치까지 미리보기 하이라이트 (이동할 지점 안내) */
+    .scene-reader .reader-progress-hover {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: calc(var(--hover-ratio, 0) * 100%);
+      background: rgba(230, 200, 255, 0.22);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease;
+    }
+
+    .scene-reader .reader-progress-wrap:hover .reader-progress-hover {
+      opacity: 1;
+    }
+
+    .scene-reader .reader-progress-wrap.dragging .reader-progress-hover {
+      opacity: 0;
+    }
+
+    /* 현재 위치 끝점 마커 (호버 시 반짝이며 등장) */
+    .scene-reader .reader-progress-fill::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      bottom: 2px;
+      right: 0;
+      width: 3px;
+      border-radius: 2px;
+      background: rgba(255, 240, 255, 0.9);
+      opacity: 0;
+      transition: opacity 0.18s ease;
+    }
+
+    .scene-reader .reader-progress-wrap:hover .reader-progress-fill::after,
+    .scene-reader .reader-progress-wrap.dragging .reader-progress-fill::after {
+      opacity: 1;
+      animation: progressMarkerPulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes progressMarkerPulse {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0.45; }
+    }
+
+    .scene-reader .reader-progress-bar {
+      position: relative;
+      width: 100%;
+      height: 18px;
+      background: url('02_motions/progress_bar.png') no-repeat center / 100% 100%;
+      overflow: hidden;
+      border-radius: 9px;
+      transform-origin: 50% 50%;
+      transition: filter 0.18s ease, transform 0.22s cubic-bezier(0.2, 0.8, 0.25, 1);
+    }
+
+    .scene-reader .reader-progress-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 18px; /* 표지 상태 시 좌측 끝에 딱 맞게 정렬 */
+      background: url('02_motions/progress_gauge.png') repeat-x left center / auto 100%;
+      transition: width 0.3s cubic-bezier(0.2, 0.8, 0.25, 1);
+    }
+
+    .scene-reader .reader-progress-wrap.dragging .reader-progress-fill {
+      transition: none; /* 드래그 중에는 즉각 반응 */
+    }
+
+    /* 독서 화면 나가기 확인 모달 (#0000 70% 오버레이 + 중앙정렬 안내창) */
+    .scene-reader .reader-exit-modal {
+      position: absolute;
+      inset: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.7);
+      animation: modalFadeIn 0.2s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    .scene-reader .exit-modal-dialog {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 36px;
+      user-select: none;
+    }
+
+    .scene-reader .exit-prompt-img {
+      width: 620px;
+      height: auto;
+      display: block;
+      pointer-events: none;
+      filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+    }
+
+    .scene-reader .exit-buttons-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+    }
+
+    .scene-reader .exit-btn {
+      background: transparent;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      display: block;
+      transition: transform 0.16s cubic-bezier(0.2, 0.8, 0.25, 1), filter 0.16s ease;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+    }
+
+    .scene-reader .exit-btn:hover {
+      transform: scale(1.06);
+      filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.6)) brightness(1.08);
+    }
+
+    .scene-reader .exit-btn:active {
+      transform: scale(0.96);
+    }
+
+    .scene-reader .exit-btn img {
+      width: 260px;
+      height: auto;
+      display: block;
+      pointer-events: none;
+    }
+
+    /* ==============================================================
+       [S2 47장면] 서점 비둘기의 독서 시간 (스탠드 조명, 안경 시선 이동, 책장 살랑임, 머그잔 김)
+       ============================================================== */
+            .scene-47 {
+      position: absolute;
+      inset: 0;
+      width: 1366px;
+      height: 1024px;
+      overflow: hidden;
+    }
+
+    .scene-47 .bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      display: block;
+      pointer-events: none;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* 1. 눈 그래픽 (398x73 원본 고화질 -> 정면 응시와 아래 책 응시 모션) */
+    .scene-47 .character-eyes {
+      position: absolute;
+      left: 681px;
+      top: 270px;
+      width: 100px;
+      height: 18.5px;
+      pointer-events: none;
+      z-index: 10;
+      transition: transform 0.75s cubic-bezier(0.25, 1, 0.5, 1);
+      transform: translate3d(0, 0, 0); /* 정면 응시 */
+    }
+
+    .scene-47 .character-eyes.looking-down {
+      transform: translate3d(0, 8.5px, 0); /* 파란 책(하단 좌측) 응시 */
+    }
+
+    .scene-47 .character-eyes img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* 2. Paper 그래픽 (파란 북커버 중앙 꼭지와 하얀 내지 중앙 꼭지 일치 + 고정점 pivot 기준 살랑거림) */
+    .scene-47 .book-paper {
+      position: absolute;
+      left: 474.5px;
+      top: 303.5px;
+      width: 147px;
+      height: 76.5px;
+      pointer-events: none;
+      z-index: 10;
+      transform-origin: 78.9px 58.9px; /* 파란 북커버 & 하얀 내지 정중앙 꼭지(spine vertex) */
+      animation: paperSway 2.6s ease-in-out infinite alternate;
+    }
+
+    .scene-47 .book-paper img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    @keyframes paperSway {
+      0%   { transform: rotate(-4.5deg); }
+      100% { transform: rotate(4.5deg); }
+    }
+
+    /* 3. Steam 그래픽 (머그잔 위 3개 연기 줄 분할 + 느린 프레임(steps) + 불규칙한 높이) */
+    .scene-47 .mug-steam-wrap {
+      position: absolute;
+      left: 970px;
+      top: 320px;
+      width: 50px;
+      height: 40px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .scene-47 .steam-line {
+      position: absolute;
+      bottom: 0;
+      width: 14px;
+      height: 40px;
+      overflow: visible;
+      transform-origin: 50% 100%;
+    }
+
+    .scene-47 .steam-line.line-1 {
+      left: 0px;
+      animation: steamRise1 5.4s steps(14) infinite;
+    }
+
+    .scene-47 .steam-line.line-2 {
+      left: 18px;
+      animation: steamRise2 6.0s steps(16) infinite;
+      animation-delay: 1.5s;
+    }
+
+    .scene-47 .steam-line.line-3 {
+      left: 36px;
+      animation: steamRise3 5.6s steps(15) infinite;
+      animation-delay: 3.0s;
+    }
+
+    /* 1번 연기 줄: 좌측 (잔잔한 높이 약 -19px) */
+    @keyframes steamRise1 {
+      0% {
+        transform: translate3d(0, 2px, 0) scale(0.9);
+        opacity: 0;
+      }
+      20% {
+        opacity: 0.7;
+      }
+      50% {
+        transform: translate3d(-1px, -9px, 0) scale(0.98);
+        opacity: 0.6;
+      }
+      80% {
+        opacity: 0.25;
+      }
+      100% {
+        transform: translate3d(-2px, -19px, 0) scale(1.05);
+        opacity: 0;
+      }
+    }
+
+    /* 2번 연기 줄 (가운데): 잔잔한 높이 (약 -23px) */
+    @keyframes steamRise2 {
+      0% {
+        transform: translate3d(0, 2px, 0) scale(0.92);
+        opacity: 0;
+      }
+      18% {
+        opacity: 0.75;
+      }
+      45% {
+        transform: translate3d(1px, -11px, 0) scale(1.02);
+        opacity: 0.65;
+      }
+      75% {
+        opacity: 0.3;
+      }
+      100% {
+        transform: translate3d(1px, -23px, 0) scale(1.08);
+        opacity: 0;
+      }
+    }
+
+    /* 3번 연기 줄 (우측): 잔잔한 높이 (약 -20px) */
+    @keyframes steamRise3 {
+      0% {
+        transform: translate3d(0, 2px, 0) scale(0.88);
+        opacity: 0;
+      }
+      22% {
+        opacity: 0.7;
+      }
+      50% {
+        transform: translate3d(1px, -10px, 0) scale(0.98);
+        opacity: 0.55;
+      }
+      80% {
+        opacity: 0.25;
+      }
+      100% {
+        transform: translate3d(1.5px, -20px, 0) scale(1.05);
+        opacity: 0;
+      }
+    }
+  
+    /* ==============================================================
+       [S2 48장면] 일어선 비둘기 씬 (배경, 왼손 책 paper 모션, 오른손 머그잔 steam 3줄 모션)
+       ============================================================== */
+    .scene-48 {
+      position: absolute;
+      inset: 0;
+      width: 1366px;
+      height: 1024px;
+      overflow: hidden;
+    }
+
+    .scene-48 .bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      display: block;
+      pointer-events: none;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* Paper 그래픽 (48번 장면: 일어선 비둘기 왼손 책 커버 위치 정밀 일치) */
+    .scene-48 .book-paper {
+      position: absolute;
+      left: 469.6px;
+      top: 348.5px;
+      width: 147px;
+      height: 76.5px;
+      pointer-events: none;
+      z-index: 10;
+      transform-origin: 78.9px 58.9px; /* 하얀 내지 V-Crease 꼭지점 고정 */
+      animation: paperSway 2.6s ease-in-out infinite alternate;
+    }
+
+    .scene-48 .book-paper img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* Steam 그래픽 (48번 장면: 일어선 비둘기 오른손 머그잔 위 위치 정밀 일치) */
+    .scene-48 .mug-steam-wrap {
+      position: absolute;
+      left: 968px;
+      top: 549px;
+      width: 50px;
+      height: 40px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .scene-48 .steam-line {
+      position: absolute;
+      bottom: 0;
+      width: 14px;
+      height: 40px;
+      overflow: visible;
+      transform-origin: 50% 100%;
+    }
+
+    .scene-48 .steam-line.line-1 {
+      left: 0px;
+      animation: steamRise1 5.4s steps(14) infinite;
+    }
+
+    .scene-48 .steam-line.line-2 {
+      left: 18px;
+      animation: steamRise2 6.0s steps(16) infinite;
+      animation-delay: 1.5s;
+    }
+
+    .scene-48 .steam-line.line-3 {
+      left: 36px;
+      animation: steamRise3 5.6s steps(15) infinite;
+      animation-delay: 3.0s;
+    }
+
+  
+    /* ==============================================================
+       [S2 47장면] 찻잔 김 (반투명 회색 김 줄기가 부드럽게 피어오름)
+       ============================================================== */
+    .scene-47 .mug-steam-wrap,
+    .scene-48 .mug-steam-wrap {
+      overflow: visible;
+    }
+
+    .scene-47 .steam-haze,
+    .scene-48 .steam-haze {
+      position: absolute;
+      left: 2px;
+      bottom: -4px;
+      width: 46px;
+      height: 16px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center, rgba(210, 210, 215, 0.35) 0%, rgba(210, 210, 215, 0) 70%);
+      filter: blur(2px);
+      animation: steamHaze 4.8s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    .scene-47 .steam-wisp,
+    .scene-48 .steam-wisp {
+      position: absolute;
+      bottom: 0;
+      width: 16px;
+      height: 44px;
+      overflow: visible;
+      fill: rgb(205, 205, 212);
+      filter: blur(1.1px);
+      transform-origin: 50% 100%;
+      opacity: 0;
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+
+    .scene-47 .steam-wisp.wisp-1, .scene-48 .steam-wisp.wisp-1 { left: 6px;  animation: wispRiseA 4.6s ease-out infinite; }
+    .scene-47 .steam-wisp.wisp-2, .scene-48 .steam-wisp.wisp-2 { left: 18px; animation: wispRiseB 5.4s ease-out infinite 1.2s; }
+    .scene-47 .steam-wisp.wisp-3, .scene-48 .steam-wisp.wisp-3 { left: 28px; animation: wispRiseA 5.0s ease-out infinite 2.5s; }
+    .scene-47 .steam-wisp.wisp-4, .scene-48 .steam-wisp.wisp-4 { left: 14px; animation: wispRiseB 6.0s ease-out infinite 3.6s; }
+
+    @keyframes wispRiseA {
+      0%   { transform: translate3d(0, 6px, 0) scale(0.55, 0.45) skewX(0deg);  opacity: 0; }
+      20%  { opacity: 0.5; }
+      50%  { transform: translate3d(-2px, -10px, 0) scale(0.9, 0.85) skewX(5deg); opacity: 0.42; }
+      80%  { opacity: 0.18; }
+      100% { transform: translate3d(3px, -28px, 0) scale(1.2, 1.1) skewX(-7deg); opacity: 0; }
+    }
+
+    @keyframes wispRiseB {
+      0%   { transform: translate3d(0, 6px, 0) scale(-0.55, 0.45) skewX(0deg);  opacity: 0; }
+      22%  { opacity: 0.45; }
+      50%  { transform: translate3d(2px, -9px, 0) scale(-0.9, 0.85) skewX(-5deg); opacity: 0.38; }
+      80%  { opacity: 0.15; }
+      100% { transform: translate3d(-3px, -26px, 0) scale(-1.2, 1.1) skewX(6deg); opacity: 0; }
+    }
+
+    @keyframes steamHaze {
+      0%, 100% { opacity: 0.5; transform: scale(0.95, 0.9); }
+      50%      { opacity: 0.9; transform: scale(1.05, 1.1); }
+    }
+  
+    /* ========== 우측 하단 페이지 번호 더블클릭 → 대사창 아래쪽 직사각형 칸(34px) 내 얇은 척도 바 ========== */
+    .scene-counter {
+      pointer-events: auto;
+      cursor: pointer;
+      padding: 6px 8px;
+      margin: -6px -8px;
+      z-index: 120;
+    }
+
+    .scene-progress-wrap {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 860px;
+      height: 34px; /* 대사창 아래쪽 직사각형 칸(182px~216px, 높이 34px) 정중앙 배치 */
+      z-index: 118;
+      pointer-events: auto;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .dialog-wrap .scene-progress-wrap {
+      left: calc(50% - 3px); /* .dialog-wrap 우측 6px 확장에 맞춘 스테이지 정중앙 정렬 */
+    }
+
+    .scene-progress-wrap.open {
+      display: flex;
+    }
+
+    .scene-progress-wrap.dragging {
+      cursor: grabbing;
+    }
+
+    .scene-progress-bar {
+      position: relative;
+      width: 100%;
+      height: 8px; /* 대사창 하단 직사각형 칸 안에 들어가는 얇은 척도 바 */
+      background: rgba(75, 15, 95, 0.38) url('02_motions/progress_bar.png') no-repeat center / 100% 100%;
+      overflow: hidden;
+      border-radius: 4px;
+      transform-origin: 50% 50%;
+      transition: filter 0.18s ease, transform 0.22s cubic-bezier(0.2, 0.8, 0.25, 1);
+    }
+
+    .scene-progress-wrap:hover .scene-progress-bar,
+    .scene-progress-wrap.dragging .scene-progress-bar {
+      transform: scaleY(1.35);
+      filter: brightness(1.25);
+    }
+
+    .scene-progress-hover {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: calc(var(--hover-ratio, 0) * 100%);
+      background: rgba(230, 200, 255, 0.22);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease;
+    }
+
+    .scene-progress-wrap:hover .scene-progress-hover {
+      opacity: 1;
+    }
+
+    .scene-progress-wrap.dragging .scene-progress-hover {
+      opacity: 0;
+    }
+
+    .scene-progress-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 10px;
+      background: rgba(75, 15, 95, 0.55) url('02_motions/progress_gauge.png') repeat-x left center / auto 100%;
+      transition: width 0.25s cubic-bezier(0.2, 0.8, 0.25, 1);
+    }
+
+    .scene-progress-wrap.dragging .scene-progress-fill {
+      transition: none;
+    }
+
+    .scene-progress-fill::after {
+      content: '';
+      position: absolute;
+      top: 1px;
+      bottom: 1px;
+      right: 0;
+      width: 3px;
+      border-radius: 2px;
+      background: rgba(255, 240, 255, 0.9);
+      opacity: 0;
+      transition: opacity 0.18s ease;
+    }
+
+    .scene-progress-wrap:hover .scene-progress-fill::after,
+    .scene-progress-wrap.dragging .scene-progress-fill::after {
+      opacity: 1;
+      animation: progressMarkerPulse 1.2s ease-in-out infinite;
+    }
+  
+    /* ==============================================================
+       [S2 49장면] 배웅하는 비둘기 클로즈업 씬
+       ============================================================== */
+    .scene-49 {
+      position: absolute;
+      inset: 0;
+      width: 1366px;
+      height: 1024px;
+      overflow: hidden;
+    }
+
+    .scene-49 .bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      display: block;
+      pointer-events: none;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+  
+    /* ==============================================================
+       [S2 50장면] 비둘기 시선 이동 씬 (아래 -> 비둘기 기준 정면 -> 카메라 정중앙)
+       ============================================================== */
+    .scene-50 {
+      position: absolute;
+      inset: 0;
+      width: 1366px;
+      height: 1024px;
+      overflow: hidden;
+    }
+
+    .scene-50 .bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      display: block;
+      pointer-events: none;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    .scene-50 .pigeon-pupil {
+      position: absolute;
+      left: 658.58px;
+      top: 383.52px;
+      width: 40px;
+      height: 39.5px;
+      pointer-events: none;
+      z-index: 10;
+      transform: translate3d(0, 0, 0); /* 1단계: 49번 장면처럼 아래(비둘기 기준) 응시 */
+      transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+      will-change: transform;
+    }
+
+    .scene-50 .pigeon-pupil.look-front {
+      transform: translate3d(-7.93px, -11.52px, 0); /* 2단계: 비둘기 기준 정면(좌측 수평) 응시 */
+    }
+
+    .scene-50 .pigeon-pupil.look-camera {
+      transform: translate3d(18.92px, -13.52px, 0); /* 3단계: 카메라 쪽(흰자의 정중앙) 응시 */
+    }
+
+    .scene-50 .pigeon-pupil img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* ==============================================================
+       [S2 51장면] 액자가 드러나며 시치미 떼는 비둘기 씬
+       ============================================================== */
+    .scene-51 {
+      position: absolute;
+      inset: 0;
+      width: 1366px;
+      height: 1024px;
+      overflow: hidden;
+    }
+
+    .scene-51 .bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      display: block;
+      pointer-events: none;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* ==============================================================
+       [S2 52장면] 액자 클로즈업 씬 ("You: (저 사진은 뭐지?)")
+       ============================================================== */
+    .scene-52 {
+      position: absolute;
+      inset: 0;
+      width: 1366px;
+      height: 1024px;
+      overflow: hidden;
+    }
+
+    .scene-52 .bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      display: block;
+      pointer-events: none;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* ==============================================================
+       [S2 53장면] 액자 정면 클로즈업 씬 ("You: (아, 그 친구인가? 오래전에 책을 선물했다던...)")
+       ============================================================== */
+    .scene-53 {
+      position: absolute;
+      inset: 0;
+      width: 1366px;
+      height: 1024px;
+      overflow: hidden;
+    }
+
+    .scene-53 .bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      display: block;
+      pointer-events: none;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* ==============================================================
+       [S2 54장면] 액자 앞을 슥 가로막으며 나타나는 비둘기 씬 (대사 없음 + 효과음)
+       ============================================================== */
+    .scene-54 {
+      position: absolute;
+      inset: 0;
+      width: 1366px;
+      height: 1024px;
+      overflow: hidden;
+    }
+
+    .scene-54 .bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      display: block;
+      pointer-events: none;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* ==============================================================
+       [S2 55장면] 정면 클로즈업 비둘기 아랫입술(lip.png) 상하 발화 모션 씬
+       ============================================================== */
+    .scene-55 {
+      position: absolute;
+      inset: 0;
+      width: 1366px;
+      height: 1024px;
+      overflow: hidden;
+    }
+
+    .scene-55 .bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      display: block;
+      pointer-events: none;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* 53 lip(x577.44y642.85 to y655.45).png 정밀 좌표 매핑 */
+    .scene-55 .pigeon-lip {
+      position: absolute;
+      left: 577.44px;
+      top: 642.85px;
+      width: 221.75px;
+      height: 51.25px;
+      pointer-events: none;
+      z-index: 10;
+      transform: translate3d(0, 0, 0);
+      transition: transform 0.085s ease-in-out;
+      will-change: transform;
+    }
+
+    .scene-55 .pigeon-lip img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* ==============================================================
+       [S2 56장면] 앞서 걸어가는 비둘기 씬 ("P: 조심해서 잘 따라오셔야죠.")
+       ============================================================== */
+    .scene-56 {
+      position: absolute;
+      inset: 0;
+      width: 1366px;
+      height: 1024px;
+      overflow: hidden;
+    }
+
+    .scene-56 .bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      display: block;
+      pointer-events: none;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* ==============================================================
+       [S2 57장면] 걸어 내려가는 비둘기 씬 ("P: 이곳의 어둠은 투구꽃의 독처럼 무섭고 위험하답니다.")
+       ============================================================== */
+    .scene-57 {
+      position: absolute;
+      inset: 0;
+      width: 1366px;
+      height: 1024px;
+      overflow: hidden;
+    }
+
+    .scene-57 .bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      display: block;
+      pointer-events: none;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* ==============================================================
+       [S2 58장면] 밖을 내다보는 비둘기 씬 ("P: 비는 결국 그치고야 말았군요.")
+       ============================================================== */
+    .scene-58 {
+      position: absolute;
+      inset: 0;
+      width: 1366px;
+      height: 1024px;
+      overflow: hidden;
+    }
+
+    .scene-58 .bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      display: block;
+      pointer-events: none;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* ==============================================================
+       [S2 59장면] 꽃을 건네며 카메라를 바라보는 비둘기 씬 ("P: 아, 그리고 이건 손님께 드리는 선물입니다.")
+       ============================================================== */
+    .scene-59 {
+      position: absolute;
+      inset: 0;
+      width: 1366px;
+      height: 1024px;
+      overflow: hidden;
+    }
+
+    .scene-59 .bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      display: block;
+      pointer-events: none;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    .scene-59 .pigeon-pupil {
+      position: absolute;
+      left: 787.5px;
+      top: 365px;
+      width: 39.75px;
+      height: 39.5px;
+      pointer-events: none;
+      z-index: 10;
+      transform: translate3d(0, 0, 0); /* 초기: 58번 장면의 정면(좌측) 응시 위치 */
+      transition: transform 0.65s cubic-bezier(0.25, 1, 0.5, 1);
+      will-change: transform;
+    }
+
+    .scene-59 .pigeon-pupil.look-camera {
+      transform: translate3d(19.63px, 11.88px, 0); /* 도착: 카메라 쪽(흰자의 정중앙 cx=827, cy=396.63) 응시 */
+    }
+
+    .scene-59 .pigeon-pupil img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* ==============================================================
+       [S2 60장면] 정면으로 돌아서서 꽃을 건네는 비둘기 씬 ("P: 떠나는 이에게는 항상 이 꽃을 선물하곤 하죠.")
+       ============================================================== */
+    .scene-60 {
+      position: absolute;
+      inset: 0;
+      width: 1366px;
+      height: 1024px;
+      overflow: hidden;
+    }
+
+    .scene-60 .bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      display: block;
+      pointer-events: none;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* ==============================================================
+       [S2 61·62장면] 꽃을 건네받은 손과 비둘기 씬 ("P: 반드시 오고야 말 행복." / "P: ’메리골드’의 꽃말입니다.")
+       ============================================================== */
+    .scene-61,
+    .scene-62 {
+      position: absolute;
+      inset: 0;
+      width: 1366px;
+      height: 1024px;
+      overflow: hidden;
+    }
+
+    .scene-61 .bg,
+    .scene-62 .bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      display: block;
+      pointer-events: none;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* 61·62번 배경에는 대사창 우측 위로 주인공의 손/소매가 겹쳐 그려져 있으므로 대화창 배경 이미지를 숨기고 하단 손/소매 필터 패치 배치 */
+    .scene-61 .dialog-bg,
+    .scene-62 .dialog-bg {
+      display: none;
+    }
+
+    .scene-61 .scene-61-hand-lower,
+    .scene-62 .scene-61-hand-lower {
+      position: absolute;
+      left: 0;
+      top: 809px;
+      width: 1366px;
+      height: 215px;
+      pointer-events: none;
+      z-index: 55;
+      display: block;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* ==============================================================
+       [S2 63·64·65장면] 건물 밖 배웅하는 비둘기 씬 + 문 배치 및 닫힘 슬라이딩/완료
+       ============================================================== */
+    .scene-63,
+    .scene-64,
+    .scene-65 {
+      position: absolute;
+      inset: 0;
+      width: 1366px;
+      height: 1024px;
+      overflow: hidden;
+    }
+
+    .scene-63 .bg,
+    .scene-64 .bg,
+    .scene-65 .bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      display: block;
+      pointer-events: none;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* 3페이지(S1 4·5·6·11장면)와 동일하게 건물 좌측 끝(x: 378.03px, y: 97.91px)에 문 배치 */
+    .scene-63 .door,
+    .scene-64 .door {
+      position: absolute;
+      left: 378.03px;
+      top: 97.91px;
+      width: 278.5px;
+      height: 653.75px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* 64번 장면: 3페이지(2.0s steps(48))와 동일한 속도로 좌측(378.03) -> 우측(619.24, +241.21px) 슬라이딩 닫힘 */
+    .scene-64 .door {
+      transform: translateX(0);
+      transition: transform 2.0s steps(48);
+      will-change: transform;
+    }
+
+    .scene-64 .door.closed {
+      transform: translateX(241.21px);
+    }
+
+    /* 65번 장면: 문이 우측 끝(x: 619.24px, y: 97.91px)으로 완전히 닫힌 상태 */
+    .scene-65 .door {
+      position: absolute;
+      left: 619.24px;
+      top: 97.91px;
+      width: 278.5px;
+      height: 653.75px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .scene-63 .door img,
+    .scene-64 .door img,
+    .scene-65 .door img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* ==============================================================
+       [S2 66장면] 밤하늘 아래 메리골드를 든 팔 씬 ("You: ‘반드시 오고야 말 행복’이라...")
+       ============================================================== */
+    .scene-66 {
+      position: absolute;
+      inset: 0;
+      width: 1366px;
+      height: 1024px;
+      overflow: hidden;
+    }
+
+    .scene-66 .bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      display: block;
+      pointer-events: none;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* 메리골드: 팔 아래 레이어(z-index: 8), 주먹 쪽 고정점 중심 살랑이는 모션 */
+    .scene-66 .marigold {
+      position: absolute;
+      left: 535.75px;
+      top: 97.25px;
+      width: 253.25px;
+      height: 385px;
+      pointer-events: none;
+      z-index: 8;
+    }
+
+    .scene-66 .marigold img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      transform-origin: 73.2% 98.2%; /* 주먹 안쪽 줄기 끝 고정점 */
+      animation: marigoldSway66 2.0s steps(25) infinite alternate;
+      backface-visibility: hidden;
+      will-change: transform;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    @keyframes marigoldSway66 {
+      from { transform: rotate(-3.5deg) translateZ(0); }
+      to   { transform: rotate(3.5deg) translateZ(0); }
+    }
+
+    /* 팔 그래픽: X365.75, Y228.31 배치 (메리골드 위 레이어 z-index: 10) */
+    .scene-66 .night-arm {
+      position: absolute;
+      left: 365.75px;
+      top: 228.31px;
+      width: 1000.25px;
+      height: 795.75px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .scene-66 .night-arm img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* 66번 장면 최상단 필터: #869CFF, multiply, 투명도 60% */
+    .scene-66 .scene-color-filter {
+      background-color: #869CFF;
+      opacity: 0.6;
+      mix-blend-mode: multiply;
+    }
+
+    /* ==============================================================
+       [S2 67·68장면] 메리골드 줄기에 묶인 쪽지를 발견하고 확인하는 씬 ("You: 엇, 뭐야." / "You: 쪽지가 있었네...?")
+       ============================================================== */
+    .scene-67,
+    .scene-68 {
+      position: absolute;
+      inset: 0;
+      width: 1366px;
+      height: 1024px;
+      overflow: hidden;
+    }
+
+    .scene-67 .bg,
+    .scene-68 .bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      display: block;
+      pointer-events: none;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* ==============================================================
+       [S2 69장면] 펼쳐진 쪽지 확인 + 1초 뒤 중앙 정렬 대사(#30864C) + 쪽지 P.S.로 줌인 연출
+       ============================================================== */
+    .scene-69 {
+      position: absolute;
+      inset: 0;
+      width: 1366px;
+      height: 1024px;
+      overflow: hidden;
+    }
+
+    .scene-69 .scene-69-zoom-wrap {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .scene-69 .bg-start {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      display: block;
+      pointer-events: none;
+      transform-origin: 0 0;
+      transform: translate3d(0, 0, 0) scale(1);
+      will-change: transform;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* 이전 줌인(35번 장면: 1.5s steps(15, end))과 동일한 카메라 줌인 모션 */
+    .scene-69.zooming .bg-start {
+      transform: translate3d(-852.10px, -1282.58px, 0) scale(3.0835);
+      transition: transform 1.5s steps(15, end);
+    }
+
+    .scene-69.zoomed .bg-start {
+      transform: translate3d(-852.10px, -1282.58px, 0) scale(3.0835) !important;
+      transition: none !important;
+    }
+
+    .scene-69 .bg-zoom-target {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      display: block;
+      pointer-events: none;
+      opacity: 0;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    .scene-69.zoomed .bg-zoom-target {
+      opacity: 1;
+    }
+
+    /* 69·70번 장면: 대화창 배경 박스 없이 원래 대사 위치에서 중앙 정렬, 색상 #30864C */
+    .scene-69 .dialog-wrap .dialog-text,
+    .scene-70 .dialog-wrap .dialog-text {
+      justify-content: center;
+      text-align: center;
+    }
+
+    .scene-69 .dialog-wrap .speaker,
+    .scene-70 .dialog-wrap .speaker {
+      display: none;
+    }
+
+    .scene-69 .dialog-wrap .dialog-body,
+    .scene-70 .dialog-wrap .dialog-body {
+      color: #30864C;
+    }
+
+    /* 대화창 배경 박스가 없는 풀스크린 일러스트이므로 컬러 필터를 1024px 전체에 균일 적용 */
+    .scene-69 .scene-color-filter,
+    .scene-70 .scene-color-filter {
+      height: 1024px !important;
+    }
+
+    /* ==============================================================
+       [S2 70장면] 밤하늘 배경 + 바닥 밀착 사각형 및 델피니움 그룹 하강 카메라 무빙
+       ============================================================== */
+    .scene-70 {
+      position: absolute;
+      inset: 0;
+      width: 1366px;
+      height: 1024px;
+      overflow: hidden;
+    }
+
+    .scene-70 .bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      display: block;
+      pointer-events: none;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* 사각형 + 델피니움 그룹: 배경은 고정한 채로 하단으로 천천히 내려가는 카메라 무빙 */
+    .scene-70 .scene-70-ground-group {
+      position: absolute;
+      inset: 0;
+      width: 1366px;
+      height: 1024px;
+      pointer-events: none;
+      z-index: 10;
+      transform: translate3d(0, 0, 0);
+      will-change: transform;
+    }
+
+    .scene-70.moving-down .scene-70-ground-group {
+      transform: translate3d(0, 520px, 0);
+      transition: transform 2.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+
+    .scene-70.moved-down .scene-70-ground-group {
+      transform: translate3d(0, 520px, 0) !important;
+      transition: none !important;
+    }
+
+    /* 첫 번째 사각형: 배경 그래픽의 바닥(bottom: 0)에 밀착 배치 */
+    .scene-70 .ground-rect {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 1366px;
+      height: 515px;
+      display: block;
+      object-fit: fill;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* 델피니움 그래픽: 사각형 위 레이어, 사각형의 위쪽(top: 525px 부근)에 가깝게 배치 */
+    .scene-70 .delphinium-row {
+      position: absolute;
+      left: 0;
+      top: 511px;
+      width: 1366px;
+      height: 280.14px;
+      display: block;
+      object-fit: contain;
+      pointer-events: none;
+      z-index: 2;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* 사각형과 델피니움이 내려간 후 상단에 씌워지는 #453E72 곱하기 필터 (0% -> 100%) */
+    .scene-70 .scene-70-ending-veil {
+      position: absolute;
+      inset: 0;
+      width: 1366px;
+      height: 1024px;
+      background-color: #453E72;
+      mix-blend-mode: multiply;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 60;
+      transition: opacity 2.0s ease;
+    }
+
+    .scene-70.veil-fading .scene-70-ending-veil {
+      opacity: 1;
+    }
+
+    .scene-70.veil-done .scene-70-ending-veil {
+      opacity: 1 !important;
+      transition: none !important;
+    }
+
+    .scene-70 .dialog-wrap .dialog-text {
+      transition: opacity 1.4s ease;
+    }
+
+    .scene-70.veil-fading .dialog-wrap .dialog-text,
+    .scene-70.veil-done .dialog-wrap .dialog-text {
+      opacity: 0;
+    }
+
+    /* #453E72 필터가 100%가 된 후 0.3초 뒤에 뜨는 로고 그래픽 */
+    .scene-70 .scene-70-logo {
+      position: absolute;
+      left: 410.26px;
+      top: 347px;
+      width: 521.69px;
+      height: 393.31px;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 70;
+      transition: opacity 0.6s ease;
+    }
+
+    .scene-70.logo-shown .scene-70-logo {
+      opacity: 1;
+    }
+
+    .scene-70 .scene-70-logo img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
